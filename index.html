@@ -254,6 +254,11 @@
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     color: var(--ink-soft); font-size: 11px; background: var(--bg);
   }
+  .photo-loading {
+    font-size: 13px; color: var(--ink-soft);
+    display: flex; align-items: center; gap: 6px; padding: 0.25rem 0;
+  }
+  .photo-loading i { animation: spin 1s linear infinite; }
 
   /* ── Lightbox ── */
   .lightbox {
@@ -376,6 +381,7 @@
 <script>
 const PUB_ID = "2PACX-1vRxRCrmw0Day_vhNpryKVgls3wmIaAstPWbERRH6hZ2nPmkCM0hLCzj7UL6zYVXk0-ofJ10ulJvg9Kp";
 const SHEET_ID = "1R9ppCaIF8aYhOIBlx_kqXJNk6sZjQUTEdu_TUXIY2EY";
+const DRIVE_API_KEY = ""; // 👉 ใส่ Google Drive API Key ที่นี่
 
 const CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv`,
@@ -462,11 +468,8 @@ function buildData(rows) {
     const locIdx = headerMain.findIndex(h => h.trim() === 'Location');
     item.mapLink = row[locIdx] ? row[locIdx].trim() : '';
 
-    // Column AI = index 34 (0-based) — may contain multiple links separated by newline, comma, or space
-    const rawPhotos = row[34] ? row[34].trim() : '';
-    item.photos = rawPhotos
-      ? rawPhotos.split(/[\n\r,\s]+/).map(u => u.trim()).filter(u => u.startsWith('http'))
-      : [];
+    // Column AI = index 34 (0-based) — folder link or file links
+    item.photoSrc = row[34] ? row[34].trim() : '';
 
     data.push(item);
   }
@@ -508,35 +511,61 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Extract Google Drive file ID from various link formats
-function extractDriveId(url) {
+// ── Google Drive helpers ──
+function extractFolderId(url) {
+  const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function extractFileId(url) {
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
   if (m) return m[1];
   const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (m2) return m2[1];
-  return null;
+  return m2 ? m2[1] : null;
 }
 
-// Thumbnail for grid (smaller, faster)
-function driveThumbUrl(url) {
-  const id = extractDriveId(url);
-  if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w400`;
-  return url;
+function thumbUrl(fileId) {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
 }
 
-// Full-size for lightbox
-function driveFullUrl(url) {
-  const id = extractDriveId(url);
-  if (id) return `https://drive.google.com/uc?export=view&id=${id}`;
-  return url;
+function fullUrl(fileId) {
+  return `https://drive.google.com/uc?export=view&id=${fileId}`;
 }
 
-// ── Lightbox state ──
-let lbPhotos = [];
+async function fetchFolderImages(folderId) {
+  const q = encodeURIComponent(`'${folderId}' in parents and mimeType contains 'image/' and trashed = false`);
+  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&orderBy=name&key=${DRIVE_API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Drive API ${res.status}: ${body.slice(0, 120)}`);
+  }
+  const json = await res.json();
+  return (json.files || []).map(f => f.id);
+}
+
+async function resolvePhotoIds(photoSrc) {
+  const fileIds = [];
+  const rawUrls = photoSrc.split(/[\n\r,]+/).map(u => u.trim()).filter(u => u.startsWith('http'));
+  for (const url of rawUrls) {
+    const folderId = extractFolderId(url);
+    if (folderId) {
+      const ids = await fetchFolderImages(folderId);
+      fileIds.push(...ids);
+    } else {
+      const fileId = extractFileId(url);
+      if (fileId) fileIds.push(fileId);
+    }
+  }
+  return fileIds;
+}
+
+// ── Lightbox ──
+let lbFileIds = [];
 let lbCurrent = 0;
 
-function openLightbox(photos, startIdx) {
-  lbPhotos = photos;
+function openLightbox(fileIds, startIdx) {
+  lbFileIds = fileIds;
   lbCurrent = startIdx;
   updateLightbox();
   document.getElementById('lightbox').classList.add('open');
@@ -549,32 +578,91 @@ function closeLightbox() {
 }
 
 function updateLightbox() {
-  document.getElementById('lb-img').src = driveFullUrl(lbPhotos[lbCurrent]);
-  document.getElementById('lb-counter').textContent = `${lbCurrent + 1} / ${lbPhotos.length}`;
-  document.getElementById('lb-prev').style.display = lbPhotos.length <= 1 ? 'none' : '';
-  document.getElementById('lb-next').style.display = lbPhotos.length <= 1 ? 'none' : '';
+  document.getElementById('lb-img').src = fullUrl(lbFileIds[lbCurrent]);
+  document.getElementById('lb-counter').textContent = `${lbCurrent + 1} / ${lbFileIds.length}`;
+  document.getElementById('lb-prev').style.display = lbFileIds.length <= 1 ? 'none' : '';
+  document.getElementById('lb-next').style.display = lbFileIds.length <= 1 ? 'none' : '';
 }
 
 document.getElementById('lb-close').addEventListener('click', closeLightbox);
 document.getElementById('lb-prev').addEventListener('click', () => {
-  lbCurrent = (lbCurrent - 1 + lbPhotos.length) % lbPhotos.length;
+  lbCurrent = (lbCurrent - 1 + lbFileIds.length) % lbFileIds.length;
   updateLightbox();
 });
 document.getElementById('lb-next').addEventListener('click', () => {
-  lbCurrent = (lbCurrent + 1) % lbPhotos.length;
+  lbCurrent = (lbCurrent + 1) % lbFileIds.length;
   updateLightbox();
 });
 document.getElementById('lightbox').addEventListener('click', e => {
-  if (e.target === e.currentTarget || e.target.closest('.lightbox-img-wrap') === e.currentTarget.querySelector('.lightbox-img-wrap')) return;
   if (e.target.id === 'lightbox') closeLightbox();
 });
 document.addEventListener('keydown', e => {
   const lb = document.getElementById('lightbox');
   if (!lb.classList.contains('open')) return;
   if (e.key === 'Escape') closeLightbox();
-  if (e.key === 'ArrowLeft') { lbCurrent = (lbCurrent - 1 + lbPhotos.length) % lbPhotos.length; updateLightbox(); }
-  if (e.key === 'ArrowRight') { lbCurrent = (lbCurrent + 1) % lbPhotos.length; updateLightbox(); }
+  if (e.key === 'ArrowLeft') { lbCurrent = (lbCurrent - 1 + lbFileIds.length) % lbFileIds.length; updateLightbox(); }
+  if (e.key === 'ArrowRight') { lbCurrent = (lbCurrent + 1) % lbFileIds.length; updateLightbox(); }
 });
+
+// ── Async photo section ──
+async function renderPhotoSection(d, panel) {
+  if (!d.photoSrc) return;
+
+  const section = document.createElement('div');
+  section.className = 'section';
+
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.textContent = 'รูปภาพ';
+  section.appendChild(label);
+
+  const loader = document.createElement('div');
+  loader.className = 'photo-loading';
+  loader.innerHTML = '<i class="ti ti-loader-2"></i> กำลังโหลดรูป...';
+  section.appendChild(loader);
+
+  panel.insertBefore(section, panel.querySelector('.detail-links'));
+
+  if (!DRIVE_API_KEY) {
+    loader.outerHTML = '<span class="no-val">ยังไม่ได้ตั้งค่า DRIVE_API_KEY</span>';
+    return;
+  }
+
+  try {
+    const fileIds = await resolvePhotoIds(d.photoSrc);
+    loader.remove();
+
+    if (fileIds.length === 0) {
+      const s = document.createElement('span');
+      s.className = 'no-val'; s.textContent = 'ไม่มีรูปในโฟลเดอร์';
+      section.appendChild(s);
+      return;
+    }
+
+    label.textContent = `รูปภาพ (${fileIds.length})`;
+
+    const grid = document.createElement('div');
+    grid.className = 'photo-grid';
+
+    fileIds.forEach((id, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      const img = document.createElement('img');
+      img.alt = `รูปที่ ${idx + 1}`;
+      img.loading = 'lazy';
+      img.src = thumbUrl(id);
+      img.onerror = () => { thumb.innerHTML = `<div class="img-err"><i class="ti ti-photo-off"></i></div>`; };
+      thumb.appendChild(img);
+      thumb.addEventListener('click', () => openLightbox(fileIds, idx));
+      grid.appendChild(thumb);
+    });
+
+    section.appendChild(grid);
+  } catch (err) {
+    loader.className = 'no-val';
+    loader.innerHTML = `<i class="ti ti-alert-triangle"></i> ${escapeHtml(err.message)}`;
+  }
+}
 
 function renderSidebar() {
   const list = document.getElementById('sidebar-list');
@@ -664,34 +752,8 @@ function renderDetail(d) {
 
   panel.innerHTML = html;
 
-  // Render photo thumbnails (requires DOM to be set first)
-  if (d.photos && d.photos.length) {
-    const section = document.createElement('div');
-    section.className = 'section';
-    section.innerHTML = `<div class="section-label">รูปภาพ (${d.photos.length})</div>`;
-    const grid = document.createElement('div');
-    grid.className = 'photo-grid';
-
-    d.photos.forEach((url, idx) => {
-      const thumb = document.createElement('div');
-      thumb.className = 'photo-thumb';
-      const img = document.createElement('img');
-      img.alt = `รูปที่ ${idx + 1}`;
-      img.loading = 'lazy';
-      img.src = driveThumbUrl(url);
-      img.onerror = () => {
-        thumb.innerHTML = `<div class="img-err"><i class="ti ti-photo-off"></i></div>`;
-      };
-      thumb.appendChild(img);
-      thumb.addEventListener('click', () => openLightbox(d.photos, idx));
-      grid.appendChild(thumb);
-    });
-
-    section.appendChild(grid);
-    // Insert photo section before the links
-    const linksEl = panel.querySelector('.detail-links');
-    panel.insertBefore(section, linksEl);
-  }
+  // Load photos asynchronously from Drive folder
+  renderPhotoSection(d, panel);
 }
 
 function applyFilters() {
