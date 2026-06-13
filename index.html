@@ -420,11 +420,41 @@ function buildData(rows) {
   const headerMain = rows[0];
   const headerSub = rows[1];
 
-  const distIdx = headerMain.findIndex(h => h.includes('ระยะทาง'));
-  const vanIdx = headerMain.findIndex(h => h.includes('วันว่าง'));
+  function findSection(keyword) {
+    const start = headerMain.findIndex(h => h.trim().includes(keyword));
+    if (start === -1) return null;
+    let end = headerMain.length;
+    for (let i = start + 1; i < headerMain.length; i++) {
+      if (headerMain[i].trim()) { end = i; break; }
+    }
+    return { start, end };
+  }
+
+  const distIdx  = headerMain.findIndex(h => h.includes('ระยะทาง'));
+  const durIdx   = headerMain.findIndex(h => h.includes('ระยะเวลา'));
+  const vanIdx   = headerMain.findIndex(h => h.includes('วันว่าง'));
+  const locIdx   = headerMain.findIndex(h => h.trim() === 'Location');
+
+  const accomSec = findSection('ประเภทที่พัก');
+  const foodSec  = findSection('อาหาร');
+  const actSec   = findSection('กิจกรรม');
+
   dateColumns = [];
   for (let i = vanIdx; i < distIdx; i++) {
     if (headerSub[i] && headerSub[i].trim()) dateColumns.push({ idx: i, label: headerSub[i].trim() });
+  }
+
+  function parseSection(row, sec) {
+    if (!sec) return [];
+    const result = [];
+    for (let c = sec.start; c < sec.end; c++) {
+      const val = row[c] ? row[c].trim() : '';
+      if (val && val !== 'ไม่มี') {
+        const label = headerSub[c] ? headerSub[c].trim() : val;
+        result.push(label || val);
+      }
+    }
+    return result;
   }
 
   const data = [];
@@ -438,38 +468,19 @@ function buildData(rows) {
       link: row[3],
       province: row[4],
       capacity: row[5],
-      accomTypes: [],
-      activities: [],
+      accomTypes: parseSection(row, accomSec),
+      food: parseSection(row, foodSec),
+      activities: parseSection(row, actSec),
       dates: [],
-      distance: '',
-      duration: '',
-      mapLink: ''
+      distance: row[distIdx] ? row[distIdx].trim() : '',
+      duration: row[durIdx] ? row[durIdx].trim() : '',
+      mapLink: row[locIdx] ? row[locIdx].trim() : '',
+      photoSrc: row[34] ? row[34].trim() : ''
     };
 
-    const accomLabels = headerSub.slice(6, 13);
-    for (let c = 6; c <= 12; c++) {
-      if (row[c] && row[c].trim()) item.accomTypes.push(accomLabels[c-6].trim() || row[c].trim());
-    }
-
-    const actLabels = headerSub.slice(16, 27);
-    for (let c = 16; c <= 26; c++) {
-      const val = row[c] ? row[c].trim() : '';
-      if (val && val !== 'ไม่มี') item.activities.push(actLabels[c-16].trim());
-    }
-
     dateColumns.forEach(d => {
-      if (row[d.idx] && row[d.idx].trim() === 'x') item.dates.push(d.label);
+      if (row[d.idx] && row[d.idx].trim().toLowerCase() === 'x') item.dates.push(d.label);
     });
-
-    const durIdx = headerMain.findIndex(h => h.includes('ระยะเวลา'));
-    item.distance = row[distIdx] ? row[distIdx].trim() : '';
-    item.duration = row[durIdx] ? row[durIdx].trim() : '';
-
-    const locIdx = headerMain.findIndex(h => h.trim() === 'Location');
-    item.mapLink = row[locIdx] ? row[locIdx].trim() : '';
-
-    // Column AI = index 34 (0-based) — folder link or file links
-    item.photoSrc = row[34] ? row[34].trim() : '';
 
     data.push(item);
   }
@@ -685,11 +696,9 @@ function renderSidebar() {
 
 function selectPlace(i) {
   activeIdx = i;
-
   document.querySelectorAll('.place-btn').forEach((btn, idx) => {
     btn.classList.toggle('active', idx === i);
   });
-
   renderDetail(filteredRows[i]);
 }
 
@@ -727,6 +736,14 @@ function renderDetail(d) {
     html += `</div></div>`;
   }
 
+  if (d.food && d.food.length) {
+    html += `<div class="section">
+      <div class="section-label">อาหาร</div>
+      <div class="tags">`;
+    d.food.forEach(f => html += `<span class="tag">${escapeHtml(f)}</span>`);
+    html += `</div></div>`;
+  }
+
   if (d.activities.length) {
     html += `<div class="section">
       <div class="section-label">กิจกรรม</div>
@@ -751,8 +768,6 @@ function renderDetail(d) {
   html += `</div>`;
 
   panel.innerHTML = html;
-
-  // Load photos asynchronously from Drive folder
   renderPhotoSection(d, panel);
 }
 
