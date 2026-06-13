@@ -769,15 +769,15 @@ function renderDetail(d) {
   if (d.mapLink) html += `<a href="${escapeHtml(d.mapLink)}" target="_blank" rel="noopener"><i class="ti ti-map"></i>ดูแผนที่</a>`;
   html += `</div>`;
 
-  if (d.detail) {
-    html += `<div class="section">
-      <div class="section-label">รายละเอียด</div>
-      <p class="detail-text">${escapeHtml(d.detail)}</p>
-    </div>`;
-  }
-
   panel.innerHTML = html;
   renderPhotoSection(d, panel);
+
+  if (d.detail) {
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = `<div class="section-label">รายละเอียด</div><p class="detail-text">${escapeHtml(d.detail)}</p>`;
+    panel.appendChild(sec);
+  }
 }
 
 function applyFilters() {
