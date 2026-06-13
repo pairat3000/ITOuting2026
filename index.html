@@ -621,7 +621,7 @@ async function renderPhotoSection(d, panel) {
   loader.innerHTML = '<i class="ti ti-loader-2"></i> กำลังโหลดรูป...';
   section.appendChild(loader);
 
-  panel.insertBefore(section, panel.querySelector('.detail-links'));
+  panel.insertBefore(section, panel.querySelector('.detail-links').nextSibling);
 
   if (!DRIVE_API_KEY) {
     loader.outerHTML = '<span class="no-val">ยังไม่ได้ตั้งค่า DRIVE_API_KEY</span>';
