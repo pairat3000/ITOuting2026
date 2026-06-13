@@ -218,7 +218,7 @@
   }
   .no-val { font-size: 13px; color: #B4B2A9; }
 
-  .detail-links { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; }
+  .detail-links { display: flex; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .detail-links a {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 9px 18px; border: 1px solid var(--line); border-radius: 7px;
@@ -632,7 +632,7 @@ async function renderPhotoSection(d, panel) {
   loader.innerHTML = '<i class="ti ti-loader-2"></i> กำลังโหลดรูป...';
   section.appendChild(loader);
 
-  panel.insertBefore(section, panel.querySelector('.detail-links').nextSibling);
+  panel.appendChild(section);
 
   if (!DRIVE_API_KEY) {
     loader.outerHTML = '<span class="no-val">ยังไม่ได้ตั้งค่า DRIVE_API_KEY</span>';
@@ -719,6 +719,11 @@ function renderDetail(d) {
       <span class="badge">${escapeHtml(d.type || '-')}</span>
     </div>
 
+    <div class="detail-links">`;
+  if (d.link) html += `<a class="primary" href="${escapeHtml(d.link.split('\n')[0].trim())}" target="_blank" rel="noopener"><i class="ti ti-brand-facebook"></i>Facebook ที่พัก</a>`;
+  if (d.mapLink) html += `<a href="${escapeHtml(d.mapLink)}" target="_blank" rel="noopener"><i class="ti ti-map"></i>ดูแผนที่</a>`;
+  html += `</div>
+
     <div class="detail-meta">`;
 
   if (d.province) html += `<div class="meta-item"><i class="ti ti-map-pin"></i><span>${escapeHtml(d.province)}</span></div>`;
@@ -761,11 +766,6 @@ function renderDetail(d) {
     html += `<span class="no-val">ไม่มีข้อมูลวันว่าง</span>`;
   }
   html += `</div></div>`;
-
-  html += `<div class="detail-links">`;
-  if (d.link) html += `<a class="primary" href="${escapeHtml(d.link.split('\n')[0].trim())}" target="_blank" rel="noopener"><i class="ti ti-brand-facebook"></i>Facebook ที่พัก</a>`;
-  if (d.mapLink) html += `<a href="${escapeHtml(d.mapLink)}" target="_blank" rel="noopener"><i class="ti ti-map"></i>ดูแผนที่</a>`;
-  html += `</div>`;
 
   panel.innerHTML = html;
   renderPhotoSection(d, panel);
