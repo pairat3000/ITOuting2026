@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หาที่พัก — Trip Finder</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #F6F4EF;
+    --surface: #FFFFFF;
+    --ink: #20242B;
+    --ink-soft: #6B7178;
+    --line: #E3E0D8;
+    --accent: #1D6F5C;
+    --accent-soft: #E1F0EA;
+    --tag: #F1EFE8;
+    --tag-ink: #5F5E5A;
+    --good: #1D6F5C;
+    --good-bg: #E1F0EA;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  header { margin-bottom: 2rem; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 0.5rem;
+  }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .sub { color: var(--ink-soft); margin-top: 0.5rem; font-size: 15px; }
+
+  .controls {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin: 1.75rem 0 0.75rem;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 1rem 0;
+  }
+  select, button {
+    font-family: inherit; font-size: 14px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  select { flex: 1; min-width: 140px; }
+  select:focus, button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button#refresh-btn {
+    white-space: nowrap; display: flex; align-items: center; gap: 6px;
+    font-weight: 500; background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  button#refresh-btn:hover { opacity: 0.9; }
+  button#refresh-btn.spinning i { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .status {
+    font-size: 13px; color: var(--ink-soft); margin-bottom: 1.5rem;
+  }
+  .status.error { color: #A32D2D; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.25rem 1.4rem;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--accent); }
+
+  .card-head {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  }
+  .card-head h2 {
+    font-family: Georgia, serif;
+    font-size: 18px; font-weight: 400; line-height: 1.35;
+  }
+  .badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    background: var(--accent-soft); color: var(--accent);
+    white-space: nowrap; font-weight: 600; letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .meta { display: flex; gap: 14px; font-size: 13px; color: var(--ink-soft); flex-wrap: wrap; }
+  .meta span { display: flex; align-items: center; gap: 4px; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+    background: var(--tag); color: var(--tag-ink);
+  }
+
+  .activities {
+    font-size: 12.5px; color: var(--ink-soft);
+    border-top: 1px solid var(--line); padding-top: 10px;
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .activities i { margin-top: 2px; flex-shrink: 0; }
+
+  .dates { display: flex; flex-wrap: wrap; gap: 6px; }
+  .date-tag {
+    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+    background: var(--good-bg); color: var(--good);
+    display: flex; align-items: center; gap: 4px; font-weight: 500;
+  }
+  .no-date { font-size: 12px; color: #B4B2A9; }
+
+  .links { display: flex; gap: 8px; margin-top: 4px; }
+  .links a {
+    flex: 1; text-align: center; font-size: 13px;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    text-decoration: none; color: var(--ink);
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .links a:hover { background: var(--bg); border-color: var(--accent); }
+
+  .empty {
+    grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;
+    color: var(--ink-soft); font-size: 14px;
+  }
+
+  footer {
+    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-soft); text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button#refresh-btn.spinning i { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Trip planner</div>
+    <h1>หาที่พักให้ทริปนี้</h1>
+    <p class="sub">ข้อมูลซิงก์สดจาก Google Sheet — กรอง กด refresh แล้วเลือกที่ใช่</p>
+  </header>
+
+  <div class="controls">
+    <select id="filter-province"><option value="">ทุกจังหวัด</option></select>
+    <select id="filter-type"><option value="">ทุกประเภท</option></select>
+    <select id="filter-date"><option value="">ทุกวันที่</option></select>
+    <button id="refresh-btn"><i class="ti ti-refresh"></i>รีเฟรช</button>
+  </div>
+
+  <div class="status" id="status-line">กำลังโหลด...</div>
+
+  <div class="grid" id="cards"></div>
+
+  <footer>ข้อมูลจาก Google Sheet ของ Golf · อัพเดทอัตโนมัติเมื่อกดรีเฟรช</footer>
+</div>
+
+<script>
+const PUB_ID = "2PACX-1vRxRCrmw0Day_vhNpryKVgls3wmIaAstPWbERRH6hZ2nPmkCM0hLCzj7UL6zYVXk0-ofJ10ulJvg9Kp";
+const SHEET_ID = "1R9ppCaIF8aYhOIBlx_kqXJNk6sZjQUTEdu_TUXIY2EY";
+
+const CSV_URLS = [
+  `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
+];
+
+let allRows = [];
+let dateColumns = [];
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && next === '\n') continue;
+        row.push(field); rows.push(row); row = []; field = '';
+      } else field += c;
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function buildData(rows) {
+  const headerMain = rows[0];
+  const headerSub = rows[1];
+
+  const distIdx = headerMain.findIndex(h => h.includes('ระยะทาง'));
+  const vanIdx = headerMain.findIndex(h => h.includes('วันว่าง'));
+  dateColumns = [];
+  for (let i = vanIdx; i < distIdx; i++) {
+    if (headerSub[i] && headerSub[i].trim()) dateColumns.push({ idx: i, label: headerSub[i].trim() });
+  }
+
+  const data = [];
+  for (let r = 2; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row[1] || !row[1].trim()) continue;
+    const item = {
+      no: row[0],
+      name: row[1],
+      type: row[2],
+      link: row[3],
+      province: row[4],
+      capacity: row[5],
+      accomTypes: [],
+      activities: [],
+      dates: [],
+      distance: '',
+      duration: '',
+      mapLink: ''
+    };
+
+    const accomLabels = headerSub.slice(6, 13);
+    for (let c = 6; c <= 12; c++) {
+      if (row[c] && row[c].trim()) item.accomTypes.push(accomLabels[c-6].trim() || row[c].trim());
+    }
+
+    const actLabels = headerSub.slice(16, 27);
+    for (let c = 16; c <= 26; c++) {
+      const val = row[c] ? row[c].trim() : '';
+      if (val && val !== 'ไม่มี') item.activities.push(actLabels[c-16].trim());
+    }
+
+    dateColumns.forEach(d => {
+      if (row[d.idx] && row[d.idx].trim() === 'x') item.dates.push(d.label);
+    });
+
+    const durIdx = headerMain.findIndex(h => h.includes('ระยะเวลา'));
+    item.distance = row[distIdx] ? row[distIdx].trim() : '';
+    item.duration = row[durIdx] ? row[durIdx].trim() : '';
+
+    const locIdx = headerMain.findIndex(h => h.trim() === 'Location');
+    item.mapLink = row[locIdx] ? row[locIdx].trim() : '';
+
+    data.push(item);
+  }
+  return data;
+}
+
+function populateFilters(data) {
+  const provinces = [...new Set(data.map(d => d.province).filter(Boolean))];
+  const types = [...new Set(data.map(d => d.type).filter(Boolean))];
+
+  const provSel = document.getElementById('filter-province');
+  while (provSel.children.length > 1) provSel.removeChild(provSel.lastChild);
+  provinces.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p; opt.textContent = p;
+    provSel.appendChild(opt);
+  });
+
+  const typeSel = document.getElementById('filter-type');
+  while (typeSel.children.length > 1) typeSel.removeChild(typeSel.lastChild);
+  types.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    typeSel.appendChild(opt);
+  });
+
+  const dateSel = document.getElementById('filter-date');
+  while (dateSel.children.length > 1) dateSel.removeChild(dateSel.lastChild);
+  dateColumns.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.label; opt.textContent = d.label;
+    dateSel.appendChild(opt);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function render() {
+  const provFilter = document.getElementById('filter-province').value;
+  const typeFilter = document.getElementById('filter-type').value;
+  const dateFilter = document.getElementById('filter-date').value;
+
+  const filtered = allRows.filter(d => {
+    if (provFilter && d.province !== provFilter) return false;
+    if (typeFilter && d.type !== typeFilter) return false;
+    if (dateFilter && !d.dates.includes(dateFilter)) return false;
+    return true;
+  });
+
+  document.getElementById('status-line').className = 'status';
+  document.getElementById('status-line').textContent =
+    `พบ ${filtered.length} ที่พัก จากทั้งหมด ${allRows.length} รายการ · อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
+
+  const cards = document.getElementById('cards');
+  cards.innerHTML = '';
+
+  if (filtered.length === 0) {
+    cards.innerHTML = '<div class="empty">ไม่พบที่พักตามตัวกรองที่เลือก ลองเปลี่ยนตัวกรองดูนะ</div>';
+    return;
+  }
+
+  filtered.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    let html = `<div class="card-head">
+      <h2>${escapeHtml(d.name)}</h2>
+      <span class="badge">${escapeHtml(d.type || '-')}</span>
+    </div>`;
+
+    html += `<div class="meta">
+      <span><i class="ti ti-map-pin"></i>${escapeHtml(d.province || '-')}</span>`;
+    if (d.capacity) html += `<span><i class="ti ti-users"></i>${escapeHtml(d.capacity)} คน</span>`;
+    if (d.distance) html += `<span><i class="ti ti-road"></i>${escapeHtml(d.distance)} กม.</span>`;
+    if (d.duration) html += `<span><i class="ti ti-clock"></i>${escapeHtml(d.duration)} ชม.</span>`;
+    html += `</div>`;
+
+    if (d.accomTypes.length) {
+      html += `<div class="tags">`;
+      d.accomTypes.forEach(t => html += `<span class="tag">${escapeHtml(t)}</span>`);
+      html += `</div>`;
+    }
+
+    if (d.activities.length) {
+      html += `<div class="activities"><i class="ti ti-activity"></i><span>${d.activities.map(a=>escapeHtml(a)).join(', ')}</span></div>`;
+    }
+
+    if (d.dates.length) {
+      html += `<div class="dates">`;
+      d.dates.forEach(dt => html += `<span class="date-tag"><i class="ti ti-calendar-check"></i>${escapeHtml(dt)}</span>`);
+      html += `</div>`;
+    } else {
+      html += `<div class="no-date">ไม่มีข้อมูลวันว่าง</div>`;
+    }
+
+    html += `<div class="links">`;
+    if (d.link) html += `<a href="${escapeHtml(d.link.split('\n')[0].trim())}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>ดูข้อมูล</a>`;
+    if (d.mapLink) html += `<a href="${escapeHtml(d.mapLink)}" target="_blank" rel="noopener"><i class="ti ti-map"></i>แผนที่</a>`;
+    html += `</div>`;
+
+    card.innerHTML = html;
+    cards.appendChild(card);
+  });
+}
+
+async function tryLoad(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('status ' + res.status);
+  const text = await res.text();
+  if (text.trim().startsWith('<')) throw new Error('got HTML, not CSV');
+  return text;
+}
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  document.getElementById('status-line').className = 'status';
+  document.getElementById('status-line').textContent = 'กำลังโหลดข้อมูล...';
+  let lastErr = null;
+  for (const url of CSV_URLS) {
+    try {
+      const text = await tryLoad(url);
+      const rows = parseCSV(text);
+      allRows = buildData(rows);
+      populateFilters(allRows);
+      render();
+      btn.classList.remove('spinning');
+      return;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  btn.classList.remove('spinning');
+  document.getElementById('status-line').className = 'status error';
+  document.getElementById('status-line').innerHTML =
+    `<i class="ti ti-alert-circle"></i> โหลดข้อมูลไม่สำเร็จ (${lastErr ? lastErr.message : 'unknown'}) — ตรวจสอบว่า sheet เป็น public`;
+}
+
+document.getElementById('filter-province').addEventListener('change', render);
+document.getElementById('filter-type').addEventListener('change', render);
+document.getElementById('filter-date').addEventListener('change', render);
+document.getElementById('refresh-btn').addEventListener('click', loadData);
+
+loadData();
+</script>
+</body>
+</html>
