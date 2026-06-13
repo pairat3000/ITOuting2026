@@ -331,6 +331,79 @@
   @media (prefers-reduced-motion: reduce) {
     button#refresh-btn.spinning i { animation: none; }
   }
+
+  /* ── Tab bar ── */
+  .tab-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-shrink: 0;
+    padding: 0 1.5rem;
+  }
+  .tab {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0.65rem 1.25rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  /* ── Price page ── */
+  .price-page {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .price-page.active { display: flex; }
+  .price-table-wrap {
+    flex: 1;
+    overflow: auto;
+    padding: 1.5rem 2rem;
+  }
+  .price-loading {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: var(--ink-soft); padding: 2rem 0;
+  }
+  .price-loading i { animation: spin 1s linear infinite; }
+  .price-error { font-size: 14px; color: #A32D2D; padding: 2rem 0; }
+  .price-table-container { overflow-x: auto; }
+  .price-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 600px;
+  }
+  .price-table thead th {
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    position: sticky; top: 0;
+  }
+  .price-table tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  .price-table tbody tr:nth-child(odd) td { background: var(--surface); }
+  .price-table tbody tr:nth-child(even) td { background: var(--bg); }
+  .price-table tbody tr:hover td { background: var(--accent-soft); }
 </style>
 </head>
 <body>
@@ -348,6 +421,15 @@
   </div>
 </div>
 
+<div class="tab-bar">
+  <button class="tab active" id="tab-places" onclick="switchTab('places')">
+    <i class="ti ti-building"></i>ที่พัก
+  </button>
+  <button class="tab" id="tab-price" onclick="switchTab('price')">
+    <i class="ti ti-receipt"></i>ราคา
+  </button>
+</div>
+
 <div class="status-bar" id="status-line">กำลังโหลด...</div>
 
 <div class="main">
@@ -361,6 +443,13 @@
       <i class="ti ti-map-pin-off"></i>
       <p>เลือกสถานที่จากรายการทางซ้ายมือ</p>
     </div>
+  </div>
+</div>
+
+<!-- Price page -->
+<div class="price-page" id="price-page">
+  <div class="price-table-wrap" id="price-table-wrap">
+    <div class="price-loading"><i class="ti ti-loader-2"></i>กำลังโหลดข้อมูลราคา...</div>
   </div>
 </div>
 
@@ -832,6 +921,60 @@ async function loadData() {
   document.getElementById('status-line').className = 'status-bar error';
   document.getElementById('status-line').innerHTML =
     `<i class="ti ti-alert-circle"></i> โหลดข้อมูลไม่สำเร็จ (${lastErr ? lastErr.message : 'unknown'}) — ตรวจสอบว่า sheet เป็น public`;
+}
+
+// ── Tab switching ──
+function switchTab(tab) {
+  const isPlaces = tab === 'places';
+  document.getElementById('tab-places').classList.toggle('active', isPlaces);
+  document.getElementById('tab-price').classList.toggle('active', !isPlaces);
+  document.querySelector('.main').style.display = isPlaces ? '' : 'none';
+  document.getElementById('status-line').style.display = isPlaces ? '' : 'none';
+  document.getElementById('price-page').classList.toggle('active', !isPlaces);
+  if (!isPlaces) loadPriceData();
+}
+
+// ── Price sheet ──
+const PRICE_CSV_URLS = [
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('ราคา')}`,
+  `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&sheet=${encodeURIComponent('ราคา')}`
+];
+
+let priceLoaded = false;
+
+async function loadPriceData() {
+  if (priceLoaded) return;
+  const wrap = document.getElementById('price-table-wrap');
+  wrap.innerHTML = '<div class="price-loading"><i class="ti ti-loader-2"></i>กำลังโหลดข้อมูลราคา...</div>';
+  let lastErr = null;
+  for (const url of PRICE_CSV_URLS) {
+    try {
+      const text = await tryLoad(url);
+      const rows = parseCSV(text);
+      if (rows.length === 0) throw new Error('ไม่มีข้อมูล');
+      renderPriceTable(rows, wrap);
+      priceLoaded = true;
+      return;
+    } catch (err) { lastErr = err; }
+  }
+  wrap.innerHTML = `<div class="price-error"><i class="ti ti-alert-circle"></i> โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(lastErr?.message || 'unknown')}</div>`;
+}
+
+function renderPriceTable(rows, wrap) {
+  const headers = rows[0];
+  const dataRows = rows.slice(1).filter(r => r.some(c => c.trim()));
+  const colIdxs = headers.map((h, i) => i).filter(i => headers[i].trim());
+
+  let html = '<div class="price-table-container"><table class="price-table"><thead><tr>';
+  colIdxs.forEach(i => { html += `<th>${escapeHtml(headers[i])}</th>`; });
+  html += '</tr></thead><tbody>';
+  dataRows.forEach(row => {
+    html += '<tr>';
+    colIdxs.forEach(i => { html += `<td>${escapeHtml(row[i] ? row[i].trim() : '')}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
 }
 
 document.getElementById('filter-province').addEventListener('change', applyFilters);
