@@ -18,6 +18,7 @@
     --tag-ink: #5F5E5A;
     --good: #1D6F5C;
     --good-bg: #E1F0EA;
+    --sidebar-w: 260px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -25,39 +26,45 @@
     background: var(--bg);
     color: var(--ink);
     line-height: 1.6;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
 
-  header { margin-bottom: 2rem; }
-  .eyebrow {
-    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--accent); font-weight: 600; margin-bottom: 0.5rem;
-  }
-  h1 {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-  }
-  .sub { color: var(--ink-soft); margin-top: 0.5rem; font-size: 15px; }
-
-  .controls {
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-    margin: 1.75rem 0 0.75rem;
-    border-top: 1px solid var(--line);
+  /* ── Top bar ── */
+  .topbar {
+    background: var(--surface);
     border-bottom: 1px solid var(--line);
-    padding: 1rem 0;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .topbar-title { flex: 0 0 auto; }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600;
+  }
+  .topbar-title h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem; font-weight: 400; letter-spacing: -0.01em;
+  }
+  .topbar-controls {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1;
   }
   select, button {
-    font-family: inherit; font-size: 14px;
+    font-family: inherit; font-size: 13px;
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
     border-radius: 6px;
-    padding: 8px 12px;
+    padding: 7px 11px;
     cursor: pointer;
   }
-  select { flex: 1; min-width: 140px; }
+  select { min-width: 130px; }
   select:focus, button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   button#refresh-btn {
     white-space: nowrap; display: flex; align-items: center; gap: 6px;
@@ -67,82 +74,177 @@
   button#refresh-btn.spinning i { animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .status {
-    font-size: 13px; color: var(--ink-soft); margin-bottom: 1.5rem;
+  .status-bar {
+    font-size: 12px; color: var(--ink-soft);
+    padding: 0.4rem 1.5rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
   }
-  .status.error { color: #A32D2D; }
+  .status-bar.error { color: #A32D2D; }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
+  /* ── Main layout ── */
+  .main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
   }
-  .card {
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    border-right: 1px solid var(--line);
     background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 1.25rem 1.4rem;
-    display: flex; flex-direction: column; gap: 10px;
-    transition: border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
-  .card:hover { border-color: var(--accent); }
+  .sidebar-header {
+    padding: 0.75rem 1rem;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .sidebar-list {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .sidebar-list::-webkit-scrollbar { width: 4px; }
+  .sidebar-list::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 
-  .card-head {
-    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  .place-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    padding: 0.7rem 1rem;
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-size: 13.5px;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background 0.1s;
   }
-  .card-head h2 {
-    font-family: Georgia, serif;
-    font-size: 18px; font-weight: 400; line-height: 1.35;
+  .place-btn:hover { background: var(--bg); }
+  .place-btn.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+    border-left: 3px solid var(--accent);
+    padding-left: calc(1rem - 3px);
+  }
+  .place-btn .btn-no {
+    font-size: 11px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+    margin-top: 2px;
+    min-width: 18px;
+  }
+  .place-btn.active .btn-no { color: var(--accent); opacity: 0.7; }
+
+  /* ── Detail panel ── */
+  .detail-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 2.5rem;
+    min-width: 0;
+  }
+  .detail-panel::-webkit-scrollbar { width: 6px; }
+  .detail-panel::-webkit-scrollbar-track { background: transparent; }
+  .detail-panel::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  .detail-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; color: var(--ink-soft); text-align: center; gap: 0.5rem;
+  }
+  .detail-empty i { font-size: 2.5rem; opacity: 0.3; }
+  .detail-empty p { font-size: 14px; }
+
+  .detail-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .detail-head h2 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 400; line-height: 1.3;
   }
   .badge {
-    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; padding: 4px 12px; border-radius: 20px;
     background: var(--accent-soft); color: var(--accent);
-    white-space: nowrap; font-weight: 600; letter-spacing: 0.02em;
-    text-transform: uppercase;
+    white-space: nowrap; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; flex-shrink: 0; margin-top: 4px;
   }
 
-  .meta { display: flex; gap: 14px; font-size: 13px; color: var(--ink-soft); flex-wrap: wrap; }
-  .meta span { display: flex; align-items: center; gap: 4px; }
+  .detail-meta {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+  .meta-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--ink-soft);
+  }
+  .meta-item i { color: var(--accent); font-size: 16px; }
+  .meta-item strong { color: var(--ink); }
 
+  .section { margin-bottom: 1.5rem; }
+  .section-label {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-soft); font-weight: 600; margin-bottom: 0.6rem;
+  }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .tag {
-    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+    font-size: 13px; padding: 4px 12px; border-radius: 20px;
     background: var(--tag); color: var(--tag-ink);
   }
-
-  .activities {
-    font-size: 12.5px; color: var(--ink-soft);
-    border-top: 1px solid var(--line); padding-top: 10px;
-    display: flex; align-items: flex-start; gap: 6px;
-  }
-  .activities i { margin-top: 2px; flex-shrink: 0; }
-
-  .dates { display: flex; flex-wrap: wrap; gap: 6px; }
   .date-tag {
-    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+    font-size: 13px; padding: 4px 12px; border-radius: 20px;
     background: var(--good-bg); color: var(--good);
-    display: flex; align-items: center; gap: 4px; font-weight: 500;
+    display: flex; align-items: center; gap: 5px; font-weight: 500;
   }
-  .no-date { font-size: 12px; color: #B4B2A9; }
+  .no-val { font-size: 13px; color: #B4B2A9; }
 
-  .links { display: flex; gap: 8px; margin-top: 4px; }
-  .links a {
-    flex: 1; text-align: center; font-size: 13px;
-    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
-    text-decoration: none; color: var(--ink);
-    display: flex; align-items: center; justify-content: center; gap: 5px;
+  .detail-links { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; }
+  .detail-links a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border: 1px solid var(--line); border-radius: 7px;
+    text-decoration: none; color: var(--ink); font-size: 14px;
     transition: background 0.15s, border-color 0.15s;
   }
-  .links a:hover { background: var(--bg); border-color: var(--accent); }
-
-  .empty {
-    grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;
-    color: var(--ink-soft); font-size: 14px;
+  .detail-links a:hover { background: var(--bg); border-color: var(--accent); }
+  .detail-links a.primary {
+    background: var(--accent); color: #fff; border-color: var(--accent);
   }
+  .detail-links a.primary:hover { opacity: 0.9; }
 
   footer {
-    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
-    font-size: 12px; color: var(--ink-soft); text-align: center;
+    font-size: 11px; color: var(--ink-soft); text-align: center;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  /* ── Mobile: stack vertically ── */
+  @media (max-width: 640px) {
+    body { overflow: auto; height: auto; }
+    .main { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); max-height: 220px; }
+    .detail-panel { padding: 1.25rem 1rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -151,26 +253,37 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+
+<div class="topbar">
+  <div class="topbar-title">
     <div class="eyebrow">Trip planner</div>
     <h1>หาที่พักให้ทริปนี้</h1>
-    <p class="sub">ข้อมูลซิงก์สดจาก Google Sheet — กรอง กด refresh แล้วเลือกที่ใช่</p>
-  </header>
-
-  <div class="controls">
+  </div>
+  <div class="topbar-controls">
     <select id="filter-province"><option value="">ทุกจังหวัด</option></select>
     <select id="filter-type"><option value="">ทุกประเภท</option></select>
     <select id="filter-date"><option value="">ทุกวันที่</option></select>
     <button id="refresh-btn"><i class="ti ti-refresh"></i>รีเฟรช</button>
   </div>
-
-  <div class="status" id="status-line">กำลังโหลด...</div>
-
-  <div class="grid" id="cards"></div>
-
-  <footer>ข้อมูลจาก Google Sheet ของ Golf · อัพเดทอัตโนมัติเมื่อกดรีเฟรช</footer>
 </div>
+
+<div class="status-bar" id="status-line">กำลังโหลด...</div>
+
+<div class="main">
+  <nav class="sidebar">
+    <div class="sidebar-header">รายชื่อสถานที่</div>
+    <div class="sidebar-list" id="sidebar-list"></div>
+  </nav>
+
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-empty">
+      <i class="ti ti-map-pin-off"></i>
+      <p>เลือกสถานที่จากรายการทางซ้ายมือ</p>
+    </div>
+  </div>
+</div>
+
+<footer>ข้อมูลจาก Google Sheet ของ Golf · อัพเดทอัตโนมัติเมื่อกดรีเฟรช</footer>
 
 <script>
 const PUB_ID = "2PACX-1vRxRCrmw0Day_vhNpryKVgls3wmIaAstPWbERRH6hZ2nPmkCM0hLCzj7UL6zYVXk0-ofJ10ulJvg9Kp";
@@ -183,7 +296,9 @@ const CSV_URLS = [
 ];
 
 let allRows = [];
+let filteredRows = [];
 let dateColumns = [];
+let activeIdx = null;
 
 function parseCSV(text) {
   const rows = [];
@@ -299,72 +414,114 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function render() {
+function renderSidebar() {
+  const list = document.getElementById('sidebar-list');
+  list.innerHTML = '';
+
+  if (filteredRows.length === 0) {
+    list.innerHTML = '<div style="padding:1rem;font-size:13px;color:var(--ink-soft)">ไม่พบรายการ</div>';
+    showEmpty();
+    return;
+  }
+
+  filteredRows.forEach((d, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'place-btn' + (i === activeIdx ? ' active' : '');
+    btn.innerHTML = `<span class="btn-no">${escapeHtml(d.no || String(i+1))}</span><span>${escapeHtml(d.name)}</span>`;
+    btn.addEventListener('click', () => selectPlace(i));
+    list.appendChild(btn);
+  });
+}
+
+function selectPlace(i) {
+  activeIdx = i;
+
+  document.querySelectorAll('.place-btn').forEach((btn, idx) => {
+    btn.classList.toggle('active', idx === i);
+  });
+
+  renderDetail(filteredRows[i]);
+}
+
+function showEmpty() {
+  document.getElementById('detail-panel').innerHTML = `
+    <div class="detail-empty">
+      <i class="ti ti-map-pin-off"></i>
+      <p>เลือกสถานที่จากรายการทางซ้ายมือ</p>
+    </div>`;
+}
+
+function renderDetail(d) {
+  const panel = document.getElementById('detail-panel');
+
+  let html = `
+    <div class="detail-head">
+      <h2>${escapeHtml(d.name)}</h2>
+      <span class="badge">${escapeHtml(d.type || '-')}</span>
+    </div>
+
+    <div class="detail-meta">`;
+
+  if (d.province) html += `<div class="meta-item"><i class="ti ti-map-pin"></i><span>${escapeHtml(d.province)}</span></div>`;
+  if (d.capacity) html += `<div class="meta-item"><i class="ti ti-users"></i><strong>${escapeHtml(d.capacity)}</strong>&nbsp;คน</div>`;
+  if (d.distance) html += `<div class="meta-item"><i class="ti ti-road"></i><strong>${escapeHtml(d.distance)}</strong>&nbsp;กม.</div>`;
+  if (d.duration) html += `<div class="meta-item"><i class="ti ti-clock"></i><strong>${escapeHtml(d.duration)}</strong>&nbsp;ชม.</div>`;
+
+  html += `</div>`;
+
+  if (d.accomTypes.length) {
+    html += `<div class="section">
+      <div class="section-label">ประเภทที่พัก</div>
+      <div class="tags">`;
+    d.accomTypes.forEach(t => html += `<span class="tag">${escapeHtml(t)}</span>`);
+    html += `</div></div>`;
+  }
+
+  if (d.activities.length) {
+    html += `<div class="section">
+      <div class="section-label">กิจกรรม</div>
+      <div class="tags">`;
+    d.activities.forEach(a => html += `<span class="tag">${escapeHtml(a)}</span>`);
+    html += `</div></div>`;
+  }
+
+  html += `<div class="section">
+    <div class="section-label">วันว่าง</div>
+    <div class="tags">`;
+  if (d.dates.length) {
+    d.dates.forEach(dt => html += `<span class="date-tag"><i class="ti ti-calendar-check"></i>${escapeHtml(dt)}</span>`);
+  } else {
+    html += `<span class="no-val">ไม่มีข้อมูลวันว่าง</span>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div class="detail-links">`;
+  if (d.link) html += `<a class="primary" href="${escapeHtml(d.link.split('\n')[0].trim())}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>ดูข้อมูลที่พัก</a>`;
+  if (d.mapLink) html += `<a href="${escapeHtml(d.mapLink)}" target="_blank" rel="noopener"><i class="ti ti-map"></i>ดูแผนที่</a>`;
+  html += `</div>`;
+
+  panel.innerHTML = html;
+}
+
+function applyFilters() {
   const provFilter = document.getElementById('filter-province').value;
   const typeFilter = document.getElementById('filter-type').value;
   const dateFilter = document.getElementById('filter-date').value;
 
-  const filtered = allRows.filter(d => {
+  filteredRows = allRows.filter(d => {
     if (provFilter && d.province !== provFilter) return false;
     if (typeFilter && d.type !== typeFilter) return false;
     if (dateFilter && !d.dates.includes(dateFilter)) return false;
     return true;
   });
 
-  document.getElementById('status-line').className = 'status';
+  document.getElementById('status-line').className = 'status-bar';
   document.getElementById('status-line').textContent =
-    `พบ ${filtered.length} ที่พัก จากทั้งหมด ${allRows.length} รายการ · อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
+    `พบ ${filteredRows.length} ที่พัก จากทั้งหมด ${allRows.length} รายการ · อัพเดทล่าสุด ${new Date().toLocaleTimeString('th-TH')}`;
 
-  const cards = document.getElementById('cards');
-  cards.innerHTML = '';
-
-  if (filtered.length === 0) {
-    cards.innerHTML = '<div class="empty">ไม่พบที่พักตามตัวกรองที่เลือก ลองเปลี่ยนตัวกรองดูนะ</div>';
-    return;
-  }
-
-  filtered.forEach(d => {
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    let html = `<div class="card-head">
-      <h2>${escapeHtml(d.name)}</h2>
-      <span class="badge">${escapeHtml(d.type || '-')}</span>
-    </div>`;
-
-    html += `<div class="meta">
-      <span><i class="ti ti-map-pin"></i>${escapeHtml(d.province || '-')}</span>`;
-    if (d.capacity) html += `<span><i class="ti ti-users"></i>${escapeHtml(d.capacity)} คน</span>`;
-    if (d.distance) html += `<span><i class="ti ti-road"></i>${escapeHtml(d.distance)} กม.</span>`;
-    if (d.duration) html += `<span><i class="ti ti-clock"></i>${escapeHtml(d.duration)} ชม.</span>`;
-    html += `</div>`;
-
-    if (d.accomTypes.length) {
-      html += `<div class="tags">`;
-      d.accomTypes.forEach(t => html += `<span class="tag">${escapeHtml(t)}</span>`);
-      html += `</div>`;
-    }
-
-    if (d.activities.length) {
-      html += `<div class="activities"><i class="ti ti-activity"></i><span>${d.activities.map(a=>escapeHtml(a)).join(', ')}</span></div>`;
-    }
-
-    if (d.dates.length) {
-      html += `<div class="dates">`;
-      d.dates.forEach(dt => html += `<span class="date-tag"><i class="ti ti-calendar-check"></i>${escapeHtml(dt)}</span>`);
-      html += `</div>`;
-    } else {
-      html += `<div class="no-date">ไม่มีข้อมูลวันว่าง</div>`;
-    }
-
-    html += `<div class="links">`;
-    if (d.link) html += `<a href="${escapeHtml(d.link.split('\n')[0].trim())}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>ดูข้อมูล</a>`;
-    if (d.mapLink) html += `<a href="${escapeHtml(d.mapLink)}" target="_blank" rel="noopener"><i class="ti ti-map"></i>แผนที่</a>`;
-    html += `</div>`;
-
-    card.innerHTML = html;
-    cards.appendChild(card);
-  });
+  activeIdx = null;
+  renderSidebar();
+  showEmpty();
 }
 
 async function tryLoad(url) {
@@ -378,7 +535,7 @@ async function tryLoad(url) {
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('spinning');
-  document.getElementById('status-line').className = 'status';
+  document.getElementById('status-line').className = 'status-bar';
   document.getElementById('status-line').textContent = 'กำลังโหลดข้อมูล...';
   let lastErr = null;
   for (const url of CSV_URLS) {
@@ -387,7 +544,7 @@ async function loadData() {
       const rows = parseCSV(text);
       allRows = buildData(rows);
       populateFilters(allRows);
-      render();
+      applyFilters();
       btn.classList.remove('spinning');
       return;
     } catch (err) {
@@ -395,14 +552,14 @@ async function loadData() {
     }
   }
   btn.classList.remove('spinning');
-  document.getElementById('status-line').className = 'status error';
+  document.getElementById('status-line').className = 'status-bar error';
   document.getElementById('status-line').innerHTML =
     `<i class="ti ti-alert-circle"></i> โหลดข้อมูลไม่สำเร็จ (${lastErr ? lastErr.message : 'unknown'}) — ตรวจสอบว่า sheet เป็น public`;
 }
 
-document.getElementById('filter-province').addEventListener('change', render);
-document.getElementById('filter-type').addEventListener('change', render);
-document.getElementById('filter-date').addEventListener('change', render);
+document.getElementById('filter-province').addEventListener('change', applyFilters);
+document.getElementById('filter-type').addEventListener('change', applyFilters);
+document.getElementById('filter-date').addEventListener('change', applyFilters);
 document.getElementById('refresh-btn').addEventListener('click', loadData);
 
 loadData();
