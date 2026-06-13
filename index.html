@@ -462,10 +462,10 @@ function buildData(rows) {
     const locIdx = headerMain.findIndex(h => h.trim() === 'Location');
     item.mapLink = row[locIdx] ? row[locIdx].trim() : '';
 
-    // Column AI = index 34 (0-based)
+    // Column AI = index 34 (0-based) — may contain multiple links separated by newline, comma, or space
     const rawPhotos = row[34] ? row[34].trim() : '';
     item.photos = rawPhotos
-      ? rawPhotos.split(/[\n,]+/).map(u => u.trim()).filter(Boolean)
+      ? rawPhotos.split(/[\n\r,\s]+/).map(u => u.trim()).filter(u => u.startsWith('http'))
       : [];
 
     data.push(item);
@@ -508,12 +508,26 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Convert Google Drive share link → embeddable image URL
-function driveImgUrl(url) {
+// Extract Google Drive file ID from various link formats
+function extractDriveId(url) {
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return `https://lh3.googleusercontent.com/d/${m[1]}`;
+  if (m) return m[1];
   const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (m2) return `https://lh3.googleusercontent.com/d/${m2[1]}`;
+  if (m2) return m2[1];
+  return null;
+}
+
+// Thumbnail for grid (smaller, faster)
+function driveThumbUrl(url) {
+  const id = extractDriveId(url);
+  if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w400`;
+  return url;
+}
+
+// Full-size for lightbox
+function driveFullUrl(url) {
+  const id = extractDriveId(url);
+  if (id) return `https://drive.google.com/uc?export=view&id=${id}`;
   return url;
 }
 
@@ -535,7 +549,7 @@ function closeLightbox() {
 }
 
 function updateLightbox() {
-  document.getElementById('lb-img').src = driveImgUrl(lbPhotos[lbCurrent]);
+  document.getElementById('lb-img').src = driveFullUrl(lbPhotos[lbCurrent]);
   document.getElementById('lb-counter').textContent = `${lbCurrent + 1} / ${lbPhotos.length}`;
   document.getElementById('lb-prev').style.display = lbPhotos.length <= 1 ? 'none' : '';
   document.getElementById('lb-next').style.display = lbPhotos.length <= 1 ? 'none' : '';
@@ -664,7 +678,7 @@ function renderDetail(d) {
       const img = document.createElement('img');
       img.alt = `รูปที่ ${idx + 1}`;
       img.loading = 'lazy';
-      img.src = driveImgUrl(url);
+      img.src = driveThumbUrl(url);
       img.onerror = () => {
         thumb.innerHTML = `<div class="img-err"><i class="ti ti-photo-off"></i></div>`;
       };
