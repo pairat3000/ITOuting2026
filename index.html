@@ -432,6 +432,13 @@
     <select id="filter-province"><option value="">ทุกจังหวัด</option></select>
     <select id="filter-type"><option value="">ทุกประเภท</option></select>
     <select id="filter-date"><option value="">ทุกวันที่</option></select>
+    <select id="sort-by">
+      <option value="">เรียง: ต้นฉบับ</option>
+      <option value="name">ชื่อ ก→ฮ</option>
+      <option value="province">จังหวัด</option>
+      <option value="distance">ระยะทาง น้อย→มาก</option>
+      <option value="capacity">ความจุ มาก→น้อย</option>
+    </select>
     <button id="refresh-btn"><i class="ti ti-refresh"></i>รีเฟรช</button>
   </div>
 </div>
@@ -888,6 +895,7 @@ function applyFilters() {
   const provFilter = document.getElementById('filter-province').value;
   const typeFilter = document.getElementById('filter-type').value;
   const dateFilter = document.getElementById('filter-date').value;
+  const sortBy = document.getElementById('sort-by').value;
 
   filteredRows = allRows.filter(d => {
     if (provFilter && d.province !== provFilter) return false;
@@ -895,6 +903,16 @@ function applyFilters() {
     if (dateFilter && !d.dates.includes(dateFilter)) return false;
     return true;
   });
+
+  if (sortBy === 'name') {
+    filteredRows.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  } else if (sortBy === 'province') {
+    filteredRows.sort((a, b) => (a.province || '').localeCompare(b.province || '', 'th') || a.name.localeCompare(b.name, 'th'));
+  } else if (sortBy === 'distance') {
+    filteredRows.sort((a, b) => (parseFloat(a.distance) || Infinity) - (parseFloat(b.distance) || Infinity));
+  } else if (sortBy === 'capacity') {
+    filteredRows.sort((a, b) => (parseFloat(b.capacity) || 0) - (parseFloat(a.capacity) || 0));
+  }
 
   document.getElementById('status-line').className = 'status-bar';
   document.getElementById('status-line').textContent =
@@ -995,6 +1013,7 @@ function renderPriceTable(rows, wrap) {
 document.getElementById('filter-province').addEventListener('change', applyFilters);
 document.getElementById('filter-type').addEventListener('change', applyFilters);
 document.getElementById('filter-date').addEventListener('change', applyFilters);
+document.getElementById('sort-by').addEventListener('change', applyFilters);
 document.getElementById('refresh-btn').addEventListener('click', loadData);
 
 loadData();
