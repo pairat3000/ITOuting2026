@@ -382,6 +382,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
+    min-width: 500px;
   }
   .price-table thead th {
     background: var(--accent);
@@ -393,7 +394,13 @@
     letter-spacing: 0.04em;
     white-space: nowrap;
     position: sticky; top: 0;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
   }
+  .price-table thead th:hover { background: #155a48; }
+  .price-table thead th.sort-asc::after { content: ' ▲'; opacity: 0.9; }
+  .price-table thead th.sort-desc::after { content: ' ▼'; opacity: 0.9; }
   .price-table tbody td {
     padding: 9px 14px;
     border-bottom: 1px solid var(--line);
@@ -403,22 +410,6 @@
   .price-table tbody tr:nth-child(odd) td { background: var(--surface); }
   .price-table tbody tr:nth-child(even) td { background: var(--bg); }
   .price-table tbody tr:hover td { background: var(--accent-soft); }
-  .price-table-vertical th {
-    background: var(--accent);
-    color: #fff;
-    padding: 9px 14px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 12px;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-    width: 1%;
-  }
-  .price-table-vertical tr:nth-child(odd) td { background: var(--surface); }
-  .price-table-vertical tr:nth-child(even) td { background: var(--bg); }
-  .price-table-vertical tr:hover td { background: var(--accent-soft); }
 </style>
 </head>
 <body>
@@ -993,21 +984,55 @@ async function loadPriceData() {
   wrap.innerHTML = `<div class="price-error"><i class="ti ti-alert-circle"></i> โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(lastErr?.message || 'unknown')}</div>`;
 }
 
-function renderPriceTable(rows, wrap) {
-  const headers = rows[0];
-  const dataRows = rows.slice(1).filter(r => r.some(c => c.trim()));
-  const colIdxs = headers.map((h, i) => i).filter(i => headers[i].trim());
+let priceSortCol = null;
+let priceSortDir = 1;
+let priceAllRows = [];
+let priceColIdxs = [];
 
-  let html = '<div class="price-table-container"><table class="price-table price-table-vertical"><tbody>';
-  colIdxs.forEach(i => {
-    html += '<tr><th>' + escapeHtml(headers[i]) + '</th>';
-    dataRows.forEach(row => {
-      html += '<td>' + escapeHtml(row[i] ? row[i].trim() : '') + '</td>';
+function renderPriceTable(rows, wrap) {
+  priceAllRows = rows;
+  const headers = rows[0];
+  priceColIdxs = headers.map((h, i) => i).filter(i => headers[i].trim());
+  priceSortCol = null;
+  priceSortDir = 1;
+  drawPriceTable(wrap);
+}
+
+function drawPriceTable(wrap) {
+  const headers = priceAllRows[0];
+  let dataRows = priceAllRows.slice(1).filter(r => r.some(c => c.trim()));
+
+  if (priceSortCol !== null) {
+    dataRows = [...dataRows].sort((a, b) => {
+      const av = (a[priceSortCol] || '').trim().replace(/,/g, '');
+      const bv = (b[priceSortCol] || '').trim().replace(/,/g, '');
+      const an = parseFloat(av), bn = parseFloat(bv);
+      if (!isNaN(an) && !isNaN(bn)) return (an - bn) * priceSortDir;
+      return av.localeCompare(bv, 'th') * priceSortDir;
     });
+  }
+
+  let html = '<div class="price-table-container"><table class="price-table"><thead><tr>';
+  priceColIdxs.forEach(i => {
+    const cls = priceSortCol === i ? (priceSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    html += `<th class="${cls}" data-col="${i}">${escapeHtml(headers[i])}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  dataRows.forEach(row => {
+    html += '<tr>';
+    priceColIdxs.forEach(i => { html += `<td>${escapeHtml(row[i] ? row[i].trim() : '')}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.price-table thead th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = parseInt(th.dataset.col);
+      if (priceSortCol === col) { priceSortDir *= -1; } else { priceSortCol = col; priceSortDir = 1; }
+      drawPriceTable(wrap);
+    });
+  });
 }
 
 document.getElementById('filter-province').addEventListener('change', applyFilters);
