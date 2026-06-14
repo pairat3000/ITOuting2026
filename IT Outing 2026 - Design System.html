@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IT Outing 2026 — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   IT OUTING 2026 — DESIGN TOKENS
+   ============================================================ */
+:root{
+  /* Brand — Teal (primary) */
+  --teal-50:#f0fdfa;  --teal-100:#ccfbf1; --teal-200:#99f6e4;
+  --teal-300:#5eead4; --teal-400:#2dd4bf; --teal-500:#14b8a6;
+  --teal-600:#0d9488; --teal-700:#0f766e; --teal-800:#115e59;
+  --teal-900:#134e4a;
+  --primary:var(--teal-700);
+  --primary-deep:var(--teal-900);
+
+  /* Accent — Sun (amber) */
+  --sun-300:#fcd34d; --sun-400:#fbbf24; --sun-500:#f59e0b;
+  --accent:var(--sun-400);
+
+  /* Pop — Coral (playful highlight) */
+  --coral-300:#fda4a0; --coral-400:#fb7367; --coral-500:#f4503f;
+  --pop:var(--coral-400);
+
+  /* Neutrals — cool, faintly teal-tinted ink */
+  --ink:#0e1f1c;  --n-900:#12241f; --n-700:#374843;
+  --n-500:#69807a; --n-400:#8fa39d; --n-300:#c5d3cf;
+  --n-200:#dde8e5; --n-100:#eef4f2; --n-50:#f6faf9; --white:#ffffff;
+
+  /* Semantic */
+  --success:#0f9d58; --warning:#f59e0b; --error:#e23b4e; --info:#0ea5e9;
+
+  /* Radius — chunky & playful */
+  --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-full:999px;
+
+  /* Spacing (4px base) */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px;
+  --s-6:32px; --s-7:48px; --s-8:64px; --s-9:96px;
+
+  /* Elevation — teal-tinted soft shadows */
+  --sh-sm:0 1px 2px rgba(15,40,36,.06), 0 1px 1px rgba(15,40,36,.04);
+  --sh-md:0 4px 14px rgba(15,60,52,.10), 0 1px 3px rgba(15,60,52,.06);
+  --sh-lg:0 18px 40px rgba(15,60,52,.14), 0 4px 10px rgba(15,60,52,.08);
+  --sh-pop:0 10px 0 var(--primary-deep);
+
+  /* Type */
+  --font-display:'Kanit', sans-serif;
+  --font-ui:'Prompt', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+
+/* ---------- DARK THEME (token overrides) ---------- */
+html[data-theme="dark"]{
+  --ink:#e8f1ee;
+  --white:#13261f;   /* surfaces / cards */
+  --n-900:#e8f1ee; --n-700:#c2d4ce; --n-500:#93aaa3; --n-400:#6e8881;
+  --n-300:#2e564e; --n-200:#244840; --n-100:#1a342e; --n-50:#0a1714;
+  --primary:#19c2b0;
+  --sh-sm:0 1px 2px rgba(0,0,0,.4);
+  --sh-md:0 6px 18px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
+  --sh-lg:0 20px 44px rgba(0,0,0,.55), 0 4px 12px rgba(0,0,0,.4);
+}
+html[data-theme="dark"] .badge.b-ok{background:#0d3a26;color:#5fe0a3;}
+html[data-theme="dark"] .badge.b-warn{background:#3d2f0a;color:#fbd66a;}
+html[data-theme="dark"] .badge.b-err{background:#3d161c;color:#ff97a3;}
+html[data-theme="dark"] .badge.b-info{background:#0a2c3d;color:#7cd4f5;}
+html[data-theme="dark"] .chip-pill{background:#173a34;color:#9ff0e0;border-color:#235047;}
+html[data-theme="dark"] .chip-pill.sun{background:#332606;color:#fcd97a;border-color:#5c4810;}
+html[data-theme="dark"] .chip-pill.coral{background:#3a1a16;color:#ffac9f;border-color:#5e2a23;}
+html[data-theme="dark"] .empty .ico{background:#11302a;border-color:var(--teal-600);}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--font-ui);
+  color:var(--ink);
+  background:var(--n-50);
+  line-height:1.5;
+  transition:background .25s ease, color .25s ease;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--sun-300);color:var(--primary-deep);}
+
+/* ---------- LAYOUT ---------- */
+.shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh;}
+.sidebar{
+  position:sticky;top:0;align-self:start;height:100vh;
+  background:var(--primary-deep);color:var(--teal-100);
+  padding:var(--s-6) var(--s-5);overflow-y:auto;
+}
+.brand-mark{display:flex;align-items:center;gap:10px;margin-bottom:var(--s-6);}
+.brand-chip{
+  width:42px;height:42px;border-radius:var(--r-md);
+  background:var(--accent);color:var(--primary-deep);
+  display:grid;place-items:center;font-family:var(--font-display);
+  font-weight:800;font-size:20px;transform:rotate(-6deg);
+  box-shadow:3px 3px 0 var(--coral-400);
+}
+.brand-text{display:flex;flex-direction:column;}
+.brand-text b{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--white);line-height:1.15;letter-spacing:.2px;white-space:nowrap;}
+.brand-text span{font-size:10px;color:var(--teal-300);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.nav-group{margin-bottom:var(--s-5);}
+.nav-group h6{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal-400);margin-bottom:var(--s-2);font-weight:600;}
+.nav-group a{
+  display:block;color:var(--teal-100);text-decoration:none;font-size:14px;
+  padding:7px 12px;border-radius:var(--r-sm);transition:.15s;font-weight:300;
+}
+.nav-group a:hover{background:rgba(255,255,255,.08);color:var(--white);}
+.sidebar-foot{margin-top:var(--s-6);font-size:11px;color:var(--teal-400);line-height:1.6;border-top:1px solid rgba(255,255,255,.1);padding-top:var(--s-4);}
+
+.main{max-width:1080px;padding:var(--s-8) var(--s-8) var(--s-9);}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;border-radius:var(--r-xl);overflow:hidden;
+  background:
+    radial-gradient(1200px 400px at 80% -20%, var(--teal-600), transparent 60%),
+    linear-gradient(135deg, var(--teal-800), var(--primary-deep));
+  color:var(--white);padding:var(--s-8) var(--s-7);margin-bottom:var(--s-8);
+}
+.hero-dots{position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(var(--teal-500) 1.5px, transparent 1.5px);
+  background-size:22px 22px;mask-image:linear-gradient(160deg,#000,transparent 70%);}
+.hero .eyebrow{position:relative;display:inline-flex;align-items:center;gap:8px;
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--teal-200);
+  background:rgba(255,255,255,.08);padding:6px 14px;border-radius:var(--r-full);margin-bottom:var(--s-4);}
+.hero h1{position:relative;font-family:var(--font-display);font-weight:800;font-size:54px;line-height:1.02;letter-spacing:-.5px;margin-bottom:var(--s-3);}
+.hero h1 em{font-style:normal;color:var(--accent);}
+.hero p{position:relative;max-width:560px;color:var(--teal-100);font-size:17px;font-weight:300;}
+.hero-tags{position:relative;display:flex;gap:10px;flex-wrap:wrap;margin-top:var(--s-5);}
+.hero-tags span{font-size:13px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:var(--r-full);}
+
+/* ---------- SECTION SCAFFOLD ---------- */
+section{margin-bottom:var(--s-8);scroll-margin-top:24px;}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:var(--s-5);padding-bottom:var(--s-3);border-bottom:2px dashed var(--n-200);}
+.sec-num{font-family:var(--font-mono);font-size:13px;color:var(--pop);font-weight:600;}
+.sec-head h2{font-family:var(--font-display);font-weight:700;font-size:28px;letter-spacing:-.3px;}
+.sec-head p{margin-left:auto;color:var(--n-500);font-size:14px;max-width:340px;text-align:right;font-weight:300;}
+.sub-label{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--n-500);margin:var(--s-5) 0 var(--s-3);font-weight:500;}
+
+.card{background:var(--white);border:1px solid var(--n-200);border-radius:var(--r-lg);box-shadow:var(--sh-sm);}
+.pad{padding:var(--s-5);}
+
+/* ---------- COLORS ---------- */
+.swatch-row{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:var(--s-3);}
+.swatch{border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--n-200);}
+.swatch .chip{height:56px;}
+.swatch .meta{padding:6px 8px;background:var(--white);}
+.swatch .meta b{display:block;font-size:11px;font-family:var(--font-mono);}
+.swatch .meta span{display:block;font-size:10px;color:var(--n-500);font-family:var(--font-mono);}
+
+.key-colors{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-4);margin-bottom:var(--s-5);}
+.key-color{border-radius:var(--r-lg);padding:var(--s-5);color:#fff;box-shadow:var(--sh-md);position:relative;min-height:128px;display:flex;flex-direction:column;justify-content:flex-end;}
+.key-color .role{font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.85;}
+.key-color .name{font-family:var(--font-display);font-weight:700;font-size:22px;margin:2px 0;}
+.key-color .hex{font-family:var(--font-mono);font-size:13px;opacity:.9;}
+.key-color .var{position:absolute;top:14px;right:14px;font-family:var(--font-mono);font-size:11px;background:rgba(0,0,0,.18);padding:3px 8px;border-radius:var(--r-full);}
+
+.semantics{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-3);}
+.sem{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r-md);background:var(--n-50);border:1px solid var(--n-200);}
+.sem i{width:18px;height:18px;border-radius:6px;}
+.sem b{font-size:13px;font-weight:600;}
+.sem span{font-family:var(--font-mono);font-size:11px;color:var(--n-500);margin-left:auto;}
+
+/* ---------- TYPE ---------- */
+.type-fonts{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-4);margin-bottom:var(--s-5);}
+.font-card{padding:var(--s-5);border-radius:var(--r-lg);border:1px solid var(--n-200);background:var(--white);}
+.font-card .glyph{font-size:60px;line-height:1;margin-bottom:var(--s-3);}
+.font-card .fname{font-family:var(--font-display);font-weight:700;font-size:20px;}
+.font-card .fuse{font-size:13px;color:var(--n-500);margin-bottom:var(--s-3);}
+.font-card .wts{display:flex;gap:8px;flex-wrap:wrap;}
+.font-card .wts span{font-size:12px;font-family:var(--font-mono);color:var(--n-500);background:var(--n-100);padding:3px 9px;border-radius:var(--r-full);}
+.type-scale{border-radius:var(--r-lg);border:1px solid var(--n-200);overflow:hidden;}
+.type-row{display:flex;align-items:baseline;gap:var(--s-5);padding:14px var(--s-5);border-bottom:1px solid var(--n-100);background:var(--white);}
+.type-row:last-child{border-bottom:none;}
+.type-row .tk{font-family:var(--font-mono);font-size:11px;color:var(--n-500);width:120px;flex-shrink:0;}
+.type-row .tx{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ---------- TOKEN GRIDS (spacing/radius/shadow) ---------- */
+.token-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-4);}
+.tg{border:1px solid var(--n-200);border-radius:var(--r-lg);overflow:hidden;background:var(--white);}
+.tg .demo{height:120px;display:grid;place-items:center;background:var(--n-50);border-bottom:1px solid var(--n-100);}
+.tg .lbl{padding:12px 14px;}
+.tg .lbl b{font-family:var(--font-mono);font-size:13px;}
+.tg .lbl span{display:block;font-size:12px;color:var(--n-500);}
+.sp-box{background:var(--teal-300);border-radius:4px;}
+.rad-box{width:78px;height:78px;background:var(--teal-600);}
+.sh-box{width:88px;height:64px;background:var(--white);border-radius:var(--r-md);}
+
+/* ---------- COMPONENTS ---------- */
+.comp-block{margin-bottom:var(--s-5);}
+.comp-stage{display:flex;flex-wrap:wrap;gap:var(--s-4);align-items:center;padding:var(--s-5);background:
+  linear-gradient(var(--n-100) 1px,transparent 1px),
+  linear-gradient(90deg,var(--n-100) 1px,transparent 1px);
+  background-size:18px 18px;background-color:var(--n-50);
+  border:1px solid var(--n-200);border-radius:var(--r-lg);}
+.comp-stage.col{flex-direction:column;align-items:stretch;}
+
+/* Buttons */
+.btn{font-family:var(--font-ui);font-weight:600;font-size:15px;border:none;cursor:pointer;
+  border-radius:var(--r-full);padding:12px 24px;display:inline-flex;align-items:center;gap:8px;transition:.16s;}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 0 var(--primary-deep);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--primary-deep);}
+.btn-primary:active{transform:translateY(3px);box-shadow:0 1px 0 var(--primary-deep);}
+.btn-accent{background:var(--accent);color:var(--primary-deep);box-shadow:0 4px 0 var(--sun-500);}
+.btn-accent:hover{transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--primary);border:2px solid var(--n-200);}
+.btn-ghost:hover{border-color:var(--primary);background:var(--teal-50);}
+.btn-icon{width:46px;height:46px;padding:0;justify-content:center;border-radius:var(--r-md);background:var(--white);border:1px solid var(--n-200);color:var(--primary);box-shadow:var(--sh-sm);font-size:18px;}
+.btn-icon:hover{background:var(--teal-50);border-color:var(--teal-300);}
+.btn-sm{padding:8px 16px;font-size:13px;}
+
+/* Select / dropdown pill */
+.field{display:flex;flex-direction:column;gap:6px;}
+.field > label{font-size:12px;font-weight:500;color:var(--n-700);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px;}
+.select{position:relative;display:inline-flex;align-items:center;}
+.select select{appearance:none;font-family:var(--font-ui);font-size:15px;font-weight:500;color:var(--ink);
+  background:var(--white);border:2px solid var(--n-200);border-radius:var(--r-full);
+  padding:11px 42px 11px 18px;cursor:pointer;transition:.15s;min-width:160px;}
+.select select:hover{border-color:var(--teal-300);}
+.select select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--teal-100);}
+.select .caret{position:absolute;right:16px;pointer-events:none;color:var(--primary);font-size:12px;}
+.input{font-family:var(--font-ui);font-size:15px;border:2px solid var(--n-200);border-radius:var(--r-full);padding:11px 18px;min-width:200px;background:var(--white);transition:.15s;}
+.input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--teal-100);}
+.input::placeholder{color:var(--n-400);}
+
+/* Chips */
+.chip-pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;
+  padding:7px 14px;border-radius:var(--r-full);background:var(--teal-50);color:var(--teal-800);border:1px solid var(--teal-200);}
+.chip-pill.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.chip-pill .x{opacity:.6;font-weight:700;cursor:pointer;}
+.chip-pill.sun{background:#fffbeb;color:#92660b;border-color:var(--sun-300);}
+.chip-pill.coral{background:#fff1f0;color:#a4271c;border-color:var(--coral-300);}
+
+/* Badges */
+.badge{font-size:11px;font-weight:600;font-family:var(--font-mono);padding:4px 10px;border-radius:var(--r-full);text-transform:uppercase;letter-spacing:.5px;}
+.badge.b-ok{background:#e7f7ef;color:#0a7a44;}
+.badge.b-warn{background:#fef3c7;color:#92660b;}
+.badge.b-err{background:#fde7ea;color:#b01e2e;}
+.badge.b-info{background:#e0f2fe;color:#0369a1;}
+
+/* ---------- FILTER BAR (priority component) ---------- */
+.filterbar{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
+  background:var(--white);border:1px solid var(--n-200);border-radius:var(--r-xl);
+  padding:18px 20px;box-shadow:var(--sh-md);width:100%;}
+.filterbar .fb-title{display:flex;align-items:center;gap:10px;margin-right:auto;}
+.fb-title .dot{width:34px;height:34px;border-radius:var(--r-md);background:var(--accent);color:var(--primary-deep);display:grid;place-items:center;font-family:var(--font-display);font-weight:800;transform:rotate(-5deg);box-shadow:2px 2px 0 var(--coral-400);}
+.fb-title b{font-family:var(--font-display);font-weight:600;font-size:16px;display:block;}
+.fb-title span{font-size:12px;color:var(--n-500);}
+.fb-spacer{flex-basis:100%;height:0;}
+
+/* ---------- ACCOMMODATION CARD ---------- */
+.cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-4);width:100%;}
+.acc-card{background:var(--white);border:1px solid var(--n-200);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-sm);transition:.18s;display:flex;flex-direction:column;}
+.acc-card:hover{transform:translateY(-3px);box-shadow:var(--sh-lg);border-color:var(--teal-200);}
+.acc-photo{height:128px;position:relative;
+  background:repeating-linear-gradient(45deg,var(--teal-100),var(--teal-100) 12px,var(--teal-50) 12px,var(--teal-50) 24px);
+  display:grid;place-items:center;}
+.acc-photo .ph{font-family:var(--font-mono);font-size:11px;color:var(--teal-700);background:rgba(255,255,255,.7);padding:4px 10px;border-radius:var(--r-full);}
+.acc-photo .fav{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:var(--r-full);background:rgba(255,255,255,.9);display:grid;place-items:center;color:var(--coral-400);box-shadow:var(--sh-sm);}
+.acc-body{padding:var(--s-4);display:flex;flex-direction:column;gap:8px;flex:1;}
+.acc-body .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.acc-body h4{font-family:var(--font-display);font-weight:600;font-size:18px;line-height:1.2;}
+.acc-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--n-500);}
+.acc-meta span{display:inline-flex;align-items:center;gap:4px;}
+.acc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px dashed var(--n-200);}
+.acc-price b{font-family:var(--font-display);font-weight:700;font-size:22px;color:var(--primary);}
+.acc-price small{font-size:12px;color:var(--n-500);font-weight:400;}
+
+/* Price display */
+.price-tag{display:inline-flex;align-items:baseline;gap:4px;background:var(--primary-deep);color:#fff;padding:10px 18px;border-radius:var(--r-md);}
+.price-tag .cur{font-size:13px;color:var(--teal-300);}
+.price-tag .amt{font-family:var(--font-display);font-weight:800;font-size:28px;line-height:1;}
+.price-tag .per{font-size:12px;color:var(--teal-200);}
+
+/* Loading / empty */
+.skeleton{background:var(--white);border:1px solid var(--n-200);border-radius:var(--r-lg);padding:var(--s-4);width:100%;max-width:300px;}
+.sk-line{height:12px;border-radius:var(--r-full);margin-bottom:10px;
+  background:linear-gradient(90deg,var(--n-100) 25%,var(--n-200) 37%,var(--n-100) 63%);
+  background-size:400% 100%;animation:shimmer 1.4s infinite;}
+.sk-img{height:80px;border-radius:var(--r-md);margin-bottom:14px;
+  background:linear-gradient(90deg,var(--n-100) 25%,var(--n-200) 37%,var(--n-100) 63%);
+  background-size:400% 100%;animation:shimmer 1.4s infinite;}
+@keyframes shimmer{0%{background-position:100% 0;}100%{background-position:-100% 0;}}
+.empty{text-align:center;padding:var(--s-7) var(--s-5);max-width:340px;}
+.empty .ico{width:72px;height:72px;border-radius:var(--r-xl);background:var(--teal-50);border:2px dashed var(--teal-300);display:grid;place-items:center;margin:0 auto var(--s-4);font-size:32px;transform:rotate(-4deg);}
+.empty h4{font-family:var(--font-display);font-weight:600;font-size:19px;margin-bottom:6px;}
+.empty p{color:var(--n-500);font-size:14px;}
+
+/* ---------- TOKENS CODE ---------- */
+.code{background:var(--primary-deep);color:var(--teal-100);border-radius:var(--r-lg);padding:var(--s-5);overflow-x:auto;
+  font-family:var(--font-mono);font-size:13px;line-height:1.75;}
+.code .c-var{color:var(--sun-300);}
+.code .c-val{color:var(--teal-300);}
+.code .c-com{color:var(--teal-500);font-style:italic;}
+
+.note{font-size:13px;color:var(--n-500);margin-top:var(--s-3);}
+.foot{margin-top:var(--s-8);padding-top:var(--s-5);border-top:2px dashed var(--n-200);color:var(--n-500);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+/* ---------- THEME TOGGLE ---------- */
+.theme-toggle{position:fixed;top:18px;right:22px;z-index:60;font-family:var(--font-ui);font-weight:600;font-size:13px;
+  border:2px solid var(--n-200);background:var(--white);color:var(--ink);border-radius:var(--r-full);
+  padding:9px 16px;cursor:pointer;box-shadow:var(--sh-md);display:flex;align-items:center;gap:7px;transition:.15s;}
+.theme-toggle:hover{border-color:var(--teal-300);transform:translateY(-1px);}
+
+/* ---------- MOBILE PHONE MOCKS ---------- */
+.phone-stage{display:flex;gap:44px;flex-wrap:wrap;justify-content:center;width:100%;padding:var(--s-6) var(--s-4);}
+.phone{width:286px;flex-shrink:0;}
+.phone .device{border-radius:42px;background:#0b1714;padding:9px;box-shadow:var(--sh-lg);}
+.phone .screen{position:relative;border-radius:34px;overflow:hidden;background:var(--n-50);height:556px;display:flex;flex-direction:column;}
+.phone .cap{text-align:center;margin-top:14px;font-family:var(--font-mono);font-size:11px;color:var(--n-500);}
+.m-island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:80px;height:22px;background:#0b1714;border-radius:var(--r-full);z-index:6;}
+.m-status{display:flex;justify-content:space-between;align-items:center;padding:13px 22px 6px;font-size:12px;font-weight:600;color:var(--ink);}
+.m-appbar{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 12px;}
+.m-appbar h3{font-family:var(--font-display);font-weight:700;font-size:21px;}
+.m-appbar h3 em{font-style:normal;color:var(--accent);}
+.m-appbar .r{width:38px;height:38px;border-radius:var(--r-md);background:var(--accent);color:var(--primary-deep);display:grid;place-items:center;font-size:16px;box-shadow:2px 2px 0 var(--coral-400);}
+.m-filters{display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none;}
+.m-filters::-webkit-scrollbar{display:none;}
+.m-pill{flex-shrink:0;font-family:var(--font-ui);font-size:13px;font-weight:500;border:2px solid var(--n-200);
+  background:var(--white);color:var(--ink);border-radius:var(--r-full);padding:8px 14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.m-pill-primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.m-count{background:var(--accent);color:var(--primary-deep);font-family:var(--font-mono);font-size:11px;font-weight:700;border-radius:var(--r-full);padding:0 6px;}
+.m-active{display:flex;gap:6px;padding:0 16px 12px;flex-wrap:wrap;}
+.m-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:11px;overflow-y:auto;flex:1;}
+.m-card{background:var(--white);border:1px solid var(--n-200);border-radius:var(--r-md);padding:11px;display:flex;gap:12px;align-items:center;box-shadow:var(--sh-sm);}
+.m-thumb{width:62px;height:62px;border-radius:10px;flex-shrink:0;
+  background:repeating-linear-gradient(45deg,var(--teal-100),var(--teal-100) 8px,var(--teal-50) 8px,var(--teal-50) 16px);}
+.m-card .info{flex:1;min-width:0;}
+.m-card h5{font-family:var(--font-display);font-weight:600;font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.m-card .mm{font-size:11px;color:var(--n-500);margin-top:2px;}
+.m-card .mp{font-family:var(--font-display);font-weight:700;color:var(--primary);font-size:16px;}
+.m-scrim{position:absolute;inset:0;background:rgba(8,18,16,.5);z-index:8;}
+.m-sheet{position:absolute;left:0;right:0;bottom:0;z-index:9;background:var(--white);border-radius:24px 24px 0 0;
+  padding:14px 18px 20px;box-shadow:0 -12px 34px rgba(0,0,0,.28);}
+.m-handle{width:42px;height:4px;border-radius:var(--r-full);background:var(--n-300);margin:0 auto 14px;}
+.m-sheet .sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.m-sheet .sh-head h4{font-family:var(--font-display);font-weight:700;font-size:18px;white-space:nowrap;}
+.m-sheet .sh-head .clr{font-size:13px;color:var(--pop);font-weight:500;}
+.m-row{margin-bottom:12px;}
+.m-row > label{display:block;font-size:11px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.5px;color:var(--n-500);margin-bottom:6px;}
+.m-row .select{display:flex;width:100%;}
+.m-row .select select{width:100%;min-width:0;}
+
+@media (max-width:880px){
+  .theme-toggle{top:auto;bottom:18px;}
+  .shell{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .main{padding:var(--s-5);}
+  .hero h1{font-size:38px;}
+  .key-colors,.token-grid,.semantics,.type-fonts,.cards-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+  <!-- SIDEBAR NAV -->
+  <aside class="sidebar">
+    <div class="brand-mark">
+      <div class="brand-chip">IT</div>
+      <div class="brand-text"><b>IT Outing 2026</b><span>Design System</span></div>
+    </div>
+    <div class="nav-group">
+      <h6>Foundations</h6>
+      <a href="#colors">Color</a>
+      <a href="#type">Typography</a>
+      <a href="#space">Spacing & Radius</a>
+      <a href="#elevation">Elevation</a>
+    </div>
+    <div class="nav-group">
+      <h6>Components</h6>
+      <a href="#buttons">Buttons</a>
+      <a href="#forms">Form controls</a>
+      <a href="#filterbar">Filter bar ★</a>
+      <a href="#mobile">Mobile patterns</a>
+      <a href="#chips">Chips & Badges</a>
+      <a href="#cards">Accommodation cards</a>
+      <a href="#price">Price display</a>
+      <a href="#states">Loading & Empty</a>
+    </div>
+    <div class="nav-group">
+      <h6>Reference</h6>
+      <a href="#tokens">CSS tokens</a>
+    </div>
+    <div class="sidebar-foot">
+      Trip Finder · หาที่พัก<br/>v1.0 · มิถุนายน 2026
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="hero-dots"></div>
+      <span class="eyebrow">● Design System · v1.0</span>
+      <h1>IT&nbsp;Outing&nbsp;<em>2026</em><br/>Trip&nbsp;Finder.</h1>
+      <p>ภาษาภาพสำหรับแอปหาที่พักของทริม IT — สดใส เป็นกันเอง พร้อมลุย. โทนเขียวทะเลสาบ + เหลืองพระอาทิตย์ บนพื้นฐานที่อ่านง่ายและใช้ซ้ำได้ทุกหน้า.</p>
+      <div class="hero-tags">
+        <span>🎨 Teal × Sun × Coral</span>
+        <span>🔤 Kanit / Prompt</span>
+        <span>🖥️ Desktop-first</span>
+        <span>🇹🇭 Thai-native</span>
+      </div>
+    </header>
+
+    <!-- COLOR -->
+    <section id="colors">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>Color</h2>
+        <p>เขียวทะเลสาบเป็นสีหลัก เหลืองพระอาทิตย์เป็นสีเน้น คอรัลไว้เติมความสนุก</p>
+      </div>
+
+      <div class="key-colors">
+        <div class="key-color" style="background:linear-gradient(135deg,var(--teal-600),var(--teal-800));">
+          <span class="var">--primary</span>
+          <span class="role">Primary · เขียวทะเลสาบ</span>
+          <span class="name">Lagoon Teal</span>
+          <span class="hex">#0F766E</span>
+        </div>
+        <div class="key-color" style="background:linear-gradient(135deg,var(--sun-400),var(--sun-500));color:var(--primary-deep);">
+          <span class="var" style="background:rgba(0,0,0,.12);">--accent</span>
+          <span class="role">Accent · เหลืองพระอาทิตย์</span>
+          <span class="name">Sunbeam</span>
+          <span class="hex">#FBBF24</span>
+        </div>
+        <div class="key-color" style="background:linear-gradient(135deg,var(--coral-400),var(--coral-500));">
+          <span class="var">--pop</span>
+          <span class="role">Pop · คอรัล</span>
+          <span class="name">Coral Pop</span>
+          <span class="hex">#FB7367</span>
+        </div>
+      </div>
+
+      <div class="sub-label">Teal scale · 50→900</div>
+      <div class="swatch-row" id="tealScale"></div>
+
+      <div class="sub-label">Neutrals · cool ink</div>
+      <div class="swatch-row" id="neutralScale"></div>
+
+      <div class="sub-label">Semantic</div>
+      <div class="semantics">
+        <div class="sem"><i style="background:var(--success);"></i><b>Success</b><span>#0F9D58</span></div>
+        <div class="sem"><i style="background:var(--warning);"></i><b>Warning</b><span>#F59E0B</span></div>
+        <div class="sem"><i style="background:var(--error);"></i><b>Error</b><span>#E23B4E</span></div>
+        <div class="sem"><i style="background:var(--info);"></i><b>Info</b><span>#0EA5E9</span></div>
+      </div>
+    </section>
+
+    <!-- TYPE -->
+    <section id="type">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Typography</h2>
+        <p>Kanit สำหรับพาดหัวหนัก ๆ · Prompt สำหรับ UI และเนื้อหา</p>
+      </div>
+
+      <div class="type-fonts">
+        <div class="font-card">
+          <div class="glyph" style="font-family:var(--font-display);font-weight:800;">Aก</div>
+          <div class="fname" style="font-family:var(--font-display);">Kanit</div>
+          <div class="fuse">Display · พาดหัว · ตัวเลขราคา</div>
+          <div class="wts"><span>400</span><span>500</span><span>600</span><span>700</span><span>800</span></div>
+        </div>
+        <div class="font-card">
+          <div class="glyph" style="font-family:var(--font-ui);font-weight:600;">Aก</div>
+          <div class="fname" style="font-family:var(--font-display);">Prompt</div>
+          <div class="fuse">UI · เนื้อหา · ปุ่ม · ฟอร์ม</div>
+          <div class="wts"><span>300</span><span>400</span><span>500</span><span>600</span><span>700</span></div>
+        </div>
+      </div>
+
+      <div class="sub-label">Type scale</div>
+      <div class="type-scale">
+        <div class="type-row"><span class="tk">Display / 54</span><span class="tx" style="font-family:var(--font-display);font-weight:800;font-size:40px;letter-spacing:-.5px;">หาที่พักให้ทริปนี้</span></div>
+        <div class="type-row"><span class="tk">H1 / 28</span><span class="tx" style="font-family:var(--font-display);font-weight:700;font-size:28px;">รายชื่อสถานที่ทั้งหมด</span></div>
+        <div class="type-row"><span class="tk">H2 / 22</span><span class="tx" style="font-family:var(--font-display);font-weight:600;font-size:22px;">บ้านพักริมน้ำ เขาใหญ่</span></div>
+        <div class="type-row"><span class="tk">Body / 16</span><span class="tx" style="font-size:16px;">รองรับสูงสุด 12 คน · ห่างจากจุดนัดพบ 4.2 กม.</span></div>
+        <div class="type-row"><span class="tk">UI label / 14</span><span class="tx" style="font-size:14px;font-weight:500;">เลือกจังหวัด · เรียงตามระยะทาง</span></div>
+        <div class="type-row"><span class="tk">Caption / 12</span><span class="tx" style="font-size:12px;color:var(--n-500);">อัพเดทอัตโนมัติเมื่อกดรีเฟรช</span></div>
+        <div class="type-row"><span class="tk">Mono / 13</span><span class="tx" style="font-family:var(--font-mono);font-size:13px;">฿1,290 / คืน · GET /sheet</span></div>
+      </div>
+    </section>
+
+    <!-- SPACING & RADIUS -->
+    <section id="space">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Spacing & Radius</h2>
+        <p>สเกล 4px · มุมโค้งแบบ chunky เพื่อความเป็นกันเอง</p>
+      </div>
+
+      <div class="sub-label">Spacing · base 4px</div>
+      <div class="card pad" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+        <div id="spaceScale" style="display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;"></div>
+      </div>
+
+      <div class="sub-label">Radius</div>
+      <div class="token-grid">
+        <div class="tg"><div class="demo"><div class="rad-box" style="border-radius:var(--r-sm);"></div></div><div class="lbl"><b>--r-sm</b><span>10px · inputs, chips</span></div></div>
+        <div class="tg"><div class="demo"><div class="rad-box" style="border-radius:var(--r-lg);"></div></div><div class="lbl"><b>--r-lg</b><span>20px · cards</span></div></div>
+        <div class="tg"><div class="demo"><div class="rad-box" style="border-radius:var(--r-full);"></div></div><div class="lbl"><b>--r-full</b><span>999px · pills, buttons</span></div></div>
+      </div>
+    </section>
+
+    <!-- ELEVATION -->
+    <section id="elevation">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Elevation</h2>
+        <p>เงาโทนเขียวนุ่ม ๆ + เงาทึบแบบ playful สำหรับปุ่ม</p>
+      </div>
+      <div class="token-grid">
+        <div class="tg"><div class="demo"><div class="sh-box" style="box-shadow:var(--sh-sm);"></div></div><div class="lbl"><b>--sh-sm</b><span>cards at rest</span></div></div>
+        <div class="tg"><div class="demo"><div class="sh-box" style="box-shadow:var(--sh-md);"></div></div><div class="lbl"><b>--sh-md</b><span>filter bar, hover</span></div></div>
+        <div class="tg"><div class="demo"><div class="sh-box" style="box-shadow:var(--sh-lg);"></div></div><div class="lbl"><b>--sh-lg</b><span>raised / focused card</span></div></div>
+      </div>
+      <p class="note">ปุ่มหลักใช้เงาทึบ (hard shadow) <code style="font-family:var(--font-mono);">0 4px 0</code> เพื่อให้กดแล้วเด้งสนุก — ดูได้ในหัวข้อ Buttons</p>
+    </section>
+
+    <!-- BUTTONS -->
+    <section id="buttons">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Buttons</h2>
+        <p>กดแล้วเด้ง — primary มีเงาทึบให้ความรู้สึกเป็นปุ่มจริง</p>
+      </div>
+      <div class="comp-stage">
+        <button class="btn btn-primary">ค้นหาที่พัก</button>
+        <button class="btn btn-accent">⟳ รีเฟรช</button>
+        <button class="btn btn-ghost">ล้างตัวกรอง</button>
+        <button class="btn btn-icon">♡</button>
+        <button class="btn btn-primary btn-sm">เลือก</button>
+        <button class="btn btn-ghost btn-sm">รายละเอียด</button>
+      </div>
+    </section>
+
+    <!-- FORM CONTROLS -->
+    <section id="forms">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Form controls</h2>
+        <p>Dropdown แบบ pill + ช่องค้นหา ใช้ทั่วทั้งแอป</p>
+      </div>
+      <div class="comp-stage">
+        <div class="field">
+          <label>จังหวัด</label>
+          <div class="select">
+            <select><option>ทุกจังหวัด</option><option>นครราชสีมา</option><option>เพชรบูรณ์</option></select>
+            <span class="caret">▼</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>ประเภท</label>
+          <div class="select">
+            <select><option>ทุกประเภท</option><option>รีสอร์ท</option><option>บ้านพัก</option></select>
+            <span class="caret">▼</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>ค้นหา</label>
+          <input class="input" placeholder="ชื่อที่พัก..." />
+        </div>
+      </div>
+    </section>
+
+    <!-- FILTER BAR (priority) -->
+    <section id="filterbar">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>Filter bar ★</h2>
+        <p>คอมโพเนนต์หลักของหน้า — จังหวัด / ประเภท / วันที่ / เรียง / รีเฟรช</p>
+      </div>
+      <div class="comp-stage">
+        <div class="filterbar">
+          <div class="fb-title">
+            <div class="dot">≡</div>
+            <div><b>กรองที่พัก</b><span>พบ 24 แห่ง</span></div>
+          </div>
+          <div class="field">
+            <label>จังหวัด</label>
+            <div class="select"><select><option>ทุกจังหวัด</option><option>นครราชสีมา</option></select><span class="caret">▼</span></div>
+          </div>
+          <div class="field">
+            <label>ประเภท</label>
+            <div class="select"><select><option>ทุกประเภท</option><option>รีสอร์ท</option></select><span class="caret">▼</span></div>
+          </div>
+          <div class="field">
+            <label>วันที่</label>
+            <div class="select"><select><option>ทุกวันที่</option><option>14–16 ก.พ.</option></select><span class="caret">▼</span></div>
+          </div>
+          <div class="field">
+            <label>เรียงตาม</label>
+            <div class="select"><select><option>ระยะทาง น้อย→มาก</option><option>ความจุ มาก→น้อย</option><option>ชื่อ ก→ฮ</option></select><span class="caret">▼</span></div>
+          </div>
+          <button class="btn btn-accent">⟳ รีเฟรช</button>
+        </div>
+      </div>
+      <p class="note">บนจอเล็ก filter bar จะ wrap เป็นหลายแถวอัตโนมัติ และยุบเหลือไอคอน + ปุ่ม “ตัวกรอง” ที่เปิดเป็น sheet</p>
+    </section>
+
+    <!-- MOBILE PATTERNS -->
+    <section id="mobile">
+      <div class="sec-head">
+        <span class="sec-num">07b</span>
+        <h2>Mobile patterns</h2>
+        <p>filter bar ยุบเป็นแถบเลื่อน + bottom sheet สำหรับจอมือถือ</p>
+      </div>
+      <div class="comp-stage">
+        <div class="phone-stage">
+
+          <!-- Phone 1: collapsed filter bar -->
+          <div class="phone">
+            <div class="device">
+              <div class="screen">
+                <div class="m-island"></div>
+                <div class="m-status"><span>9:41</span><span>📶 🔋</span></div>
+                <div class="m-appbar"><h3>หาที่พัก <em>·</em></h3><div class="r">⟳</div></div>
+                <div class="m-filters">
+                  <button class="m-pill m-pill-primary">≡ ตัวกรอง <span class="m-count">2</span></button>
+                  <button class="m-pill">จังหวัด ▾</button>
+                  <button class="m-pill">ประเภท ▾</button>
+                  <button class="m-pill">เรียง ▾</button>
+                </div>
+                <div class="m-active">
+                  <span class="chip-pill active" style="font-size:12px;padding:5px 11px;">นครราชสีมา <span class="x">✕</span></span>
+                  <span class="chip-pill sun" style="font-size:12px;padding:5px 11px;">รีสอร์ท <span class="x">✕</span></span>
+                </div>
+                <div class="m-list">
+                  <div class="m-card">
+                    <div class="m-thumb"></div>
+                    <div class="info"><h5>บ้านพักริมน้ำ เขาใหญ่</h5><div class="mm">👥 12 · 📍 4.2 กม.</div></div>
+                    <div class="mp">฿1,290</div>
+                  </div>
+                  <div class="m-card">
+                    <div class="m-thumb"></div>
+                    <div class="info"><h5>วนธารา รีสอร์ท</h5><div class="mm">👥 30 · 📍 8.0 กม.</div></div>
+                    <div class="mp">฿2,450</div>
+                  </div>
+                  <div class="m-card">
+                    <div class="m-thumb"></div>
+                    <div class="info"><h5>ภูวิว แคมป์</h5><div class="mm">👥 20 · 📍 11 กม.</div></div>
+                    <div class="mp">฿1,800</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cap">ยุบเป็นแถบเดียว · เลื่อนแนวนอน</div>
+          </div>
+
+          <!-- Phone 2: filter sheet open -->
+          <div class="phone">
+            <div class="device">
+              <div class="screen">
+                <div class="m-island"></div>
+                <div class="m-status"><span>9:41</span><span>📶 🔋</span></div>
+                <div class="m-appbar"><h3>หาที่พัก <em>·</em></h3><div class="r">⟳</div></div>
+                <div class="m-filters">
+                  <button class="m-pill m-pill-primary">≡ ตัวกรอง <span class="m-count">2</span></button>
+                  <button class="m-pill">จังหวัด ▾</button>
+                  <button class="m-pill">ประเภท ▾</button>
+                </div>
+                <div class="m-scrim"></div>
+                <div class="m-sheet">
+                  <div class="m-handle"></div>
+                  <div class="sh-head"><h4>ตัวกรอง</h4><span class="clr">ล้างทั้งหมด</span></div>
+                  <div class="m-row"><label>จังหวัด</label><div class="select"><select><option>นครราชสีมา</option><option>เพชรบูรณ์</option></select><span class="caret">▼</span></div></div>
+                  <div class="m-row"><label>ประเภท</label><div class="select"><select><option>รีสอร์ท</option><option>บ้านพัก</option></select><span class="caret">▼</span></div></div>
+                  <div class="m-row"><label>วันที่</label><div class="select"><select><option>14–16 ก.พ.</option><option>ทุกวันที่</option></select><span class="caret">▼</span></div></div>
+                  <div class="m-row"><label>เรียงตาม</label><div class="select"><select><option>ระยะทาง น้อย→มาก</option><option>ความจุ มาก→น้อย</option></select><span class="caret">▼</span></div></div>
+                  <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;">ดูผลลัพธ์ 24 แห่ง</button>
+                </div>
+              </div>
+            </div>
+            <div class="cap">แตะ “ตัวกรอง” → เปิด bottom sheet</div>
+          </div>
+
+        </div>
+      </div>
+      <p class="note">หลักการ: บนมือถือเก็บตัวกรองทั้งหมดไว้ใน sheet เดียว เพื่อให้พื้นที่จอเหลือไว้แสดงรายการที่พักมากที่สุด · ปุ่ม “ดูผลลัพธ์” ติดล่างเสมอ</p>
+    </section>
+
+    <!-- CHIPS & BADGES -->
+    <section id="chips">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Chips & Badges</h2>
+        <p>Chip = ตัวกรองที่เลือกอยู่ · Badge = สถานะ</p>
+      </div>
+      <div class="sub-label">Filter chips</div>
+      <div class="comp-stage">
+        <span class="chip-pill active">นครราชสีมา <span class="x">✕</span></span>
+        <span class="chip-pill">รีสอร์ท <span class="x">✕</span></span>
+        <span class="chip-pill sun">14–16 ก.พ. <span class="x">✕</span></span>
+        <span class="chip-pill coral">ว่าง <span class="x">✕</span></span>
+        <span class="chip-pill">+ เพิ่มตัวกรอง</span>
+      </div>
+      <div class="sub-label">Status badges</div>
+      <div class="comp-stage">
+        <span class="badge b-ok">ว่าง</span>
+        <span class="badge b-warn">เหลือน้อย</span>
+        <span class="badge b-err">เต็มแล้ว</span>
+        <span class="badge b-info">ราคาพิเศษ</span>
+      </div>
+    </section>
+
+    <!-- ACCOMMODATION CARDS -->
+    <section id="cards">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>Accommodation cards</h2>
+        <p>การ์ดรายการที่พัก — รูป · ชื่อ · ความจุ · ระยะทาง · ราคา</p>
+      </div>
+      <div class="comp-stage">
+        <div class="cards-grid">
+          <div class="acc-card">
+            <div class="acc-photo"><span class="ph">ภาพที่พัก 16:9</span><span class="fav">♡</span></div>
+            <div class="acc-body">
+              <div class="top"><h4>บ้านพักริมน้ำ เขาใหญ่</h4><span class="badge b-ok">ว่าง</span></div>
+              <div class="acc-meta"><span>👥 12 คน</span><span>📍 4.2 กม.</span><span>🏡 บ้านพัก</span></div>
+              <div class="acc-foot">
+                <div class="acc-price"><b>฿1,290</b> <small>/ คืน</small></div>
+                <button class="btn btn-primary btn-sm">เลือก</button>
+              </div>
+            </div>
+          </div>
+          <div class="acc-card">
+            <div class="acc-photo"><span class="ph">ภาพที่พัก 16:9</span><span class="fav">♡</span></div>
+            <div class="acc-body">
+              <div class="top"><h4>วนธารา รีสอร์ท</h4><span class="badge b-warn">เหลือน้อย</span></div>
+              <div class="acc-meta"><span>👥 30 คน</span><span>📍 8.0 กม.</span><span>🏨 รีสอร์ท</span></div>
+              <div class="acc-foot">
+                <div class="acc-price"><b>฿2,450</b> <small>/ คืน</small></div>
+                <button class="btn btn-primary btn-sm">เลือก</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICE DISPLAY -->
+    <section id="price">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>Price display</h2>
+        <p>ป้ายราคาเด่นชัด ใช้ Kanit หนัก ๆ</p>
+      </div>
+      <div class="comp-stage">
+        <div class="price-tag"><span class="cur">฿</span><span class="amt">1,290</span><span class="per">/ คืน</span></div>
+        <div class="price-tag" style="background:var(--primary);"><span class="cur">฿</span><span class="amt">2,450</span><span class="per">/ คืน</span></div>
+        <div style="display:flex;flex-direction:column;">
+          <span style="font-size:12px;color:var(--n-500);">รวม 2 คืน · 24 คน</span>
+          <span style="font-family:var(--font-display);font-weight:800;font-size:30px;color:var(--primary);">฿61,920</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOADING & EMPTY -->
+    <section id="states">
+      <div class="sec-head">
+        <span class="sec-num">11</span>
+        <h2>Loading & Empty states</h2>
+        <p>“กำลังโหลด...” และ “เลือกสถานที่จากรายการ”</p>
+      </div>
+      <div class="comp-stage" style="gap:var(--s-7);">
+        <div class="skeleton">
+          <div class="sk-img"></div>
+          <div class="sk-line" style="width:80%;"></div>
+          <div class="sk-line" style="width:55%;"></div>
+          <div class="sk-line" style="width:40%;margin-bottom:0;"></div>
+        </div>
+        <div class="empty">
+          <div class="ico">🗺️</div>
+          <h4>เลือกสถานที่จากรายการ</h4>
+          <p>เลือกที่พักทางซ้ายมือเพื่อดูราคาและรายละเอียดเพิ่มเติม</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOKENS -->
+    <section id="tokens">
+      <div class="sec-head">
+        <span class="sec-num">12</span>
+        <h2>CSS tokens</h2>
+        <p>คัดลอกไปวางใน :root ได้เลย</p>
+      </div>
+      <div class="code">
+<span class="c-com">/* Brand */</span>
+<span class="c-var">--primary</span>:      <span class="c-val">#0F766E</span>;  <span class="c-com">/* Lagoon Teal */</span>
+<span class="c-var">--primary-deep</span>: <span class="c-val">#134E4A</span>;
+<span class="c-var">--accent</span>:       <span class="c-val">#FBBF24</span>;  <span class="c-com">/* Sunbeam */</span>
+<span class="c-var">--pop</span>:          <span class="c-val">#FB7367</span>;  <span class="c-com">/* Coral Pop */</span>
+
+<span class="c-com">/* Neutrals (cool ink) */</span>
+<span class="c-var">--ink</span>:<span class="c-val">#0E1F1C</span>; <span class="c-var">--n-500</span>:<span class="c-val">#69807A</span>; <span class="c-var">--n-200</span>:<span class="c-val">#DDE8E5</span>; <span class="c-var">--n-50</span>:<span class="c-val">#F6FAF9</span>;
+
+<span class="c-com">/* Type */</span>
+<span class="c-var">--font-display</span>: <span class="c-val">'Kanit'</span>;   <span class="c-com">/* headings, price */</span>
+<span class="c-var">--font-ui</span>:      <span class="c-val">'Prompt'</span>;  <span class="c-com">/* body, UI */</span>
+
+<span class="c-com">/* Radius · Spacing (4px) · Shadow */</span>
+<span class="c-var">--r-sm</span>:<span class="c-val">10px</span>; <span class="c-var">--r-lg</span>:<span class="c-val">20px</span>; <span class="c-var">--r-full</span>:<span class="c-val">999px</span>;
+<span class="c-var">--s-4</span>:<span class="c-val">16px</span>; <span class="c-var">--s-5</span>:<span class="c-val">24px</span>; <span class="c-var">--s-6</span>:<span class="c-val">32px</span>;
+<span class="c-var">--sh-md</span>: <span class="c-val">0 4px 14px rgba(15,60,52,.10)</span>;
+      </div>
+    </section>
+
+    <div class="foot">
+      <span>IT Outing 2026 · Trip Finder — Design System v1.0</span>
+      <span>หาที่พัก · ข้อมูลจาก Google Sheet</span>
+    </div>
+  </main>
+</div>
+
+<script>
+// Theme toggle (persistent)
+(function(){
+  const root=document.documentElement;
+  const btn=document.getElementById('themeToggle');
+  if(localStorage.getItem('itouting-theme')==='dark')root.setAttribute('data-theme','dark');
+  function sync(){const d=root.getAttribute('data-theme')==='dark';btn.textContent=d?'☀️ Light':'🌙 Dark';}
+  btn.addEventListener('click',()=>{
+    const d=root.getAttribute('data-theme')==='dark';
+    if(d){root.removeAttribute('data-theme');localStorage.setItem('itouting-theme','light');}
+    else{root.setAttribute('data-theme','dark');localStorage.setItem('itouting-theme','dark');}
+    sync();
+  });
+  sync();
+})();
+
+// Build teal scale swatches
+const teal = [
+  ['50','#f0fdfa'],['100','#ccfbf1'],['200','#99f6e4'],['300','#5eead4'],['400','#2dd4bf'],
+  ['500','#14b8a6'],['600','#0d9488'],['700','#0f766e'],['800','#115e59'],['900','#134e4a']
+];
+const neutral = [
+  ['ink','#0e1f1c'],['900','#12241f'],['700','#374843'],['500','#69807a'],['400','#8fa39d'],
+  ['300','#c5d3cf'],['200','#dde8e5'],['100','#eef4f2'],['50','#f6faf9'],['white','#ffffff']
+];
+function buildScale(id, arr, prefix){
+  const el = document.getElementById(id);
+  el.innerHTML = arr.map(([k,v])=>{
+    const dark = ['50','100','200','300','400','white','50 '].includes(k) || k==='50';
+    return `<div class="swatch"><div class="chip" style="background:${v}"></div>
+      <div class="meta"><b>${prefix}${k}</b><span>${v.toUpperCase()}</span></div></div>`;
+  }).join('');
+}
+buildScale('tealScale', teal, '');
+buildScale('neutralScale', neutral, 'n-');
+
+// Spacing scale
+const spaces = [['1',4],['2',8],['3',12],['4',16],['5',24],['6',32],['7',48],['8',64]];
+document.getElementById('spaceScale').innerHTML = spaces.map(([k,v])=>
+  `<div style="text-align:center;">
+     <div class="sp-box" style="width:${v}px;height:${v}px;margin:0 auto 8px;"></div>
+     <div style="font-family:var(--font-mono);font-size:11px;color:var(--n-700);">--s-${k}</div>
+     <div style="font-family:var(--font-mono);font-size:10px;color:var(--n-500);">${v}px</div>
+   </div>`).join('');
+</script>
+</body>
+</html>
