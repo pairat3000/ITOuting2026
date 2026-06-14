@@ -364,9 +364,11 @@ const SHEET_ID = "1R9ppCaIF8aYhOIBlx_kqXJNk6sZjQUTEdu_TUXIY2EY";
 const DRIVE_API_KEY = "AIzaSyCFdDRdsSgJ9tRk2I4hi6rnNx_N0Dw1Jfs";
 
 const CSV_URLS = [
+  `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=0`,
   `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv`,
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`,
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Sheet1`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`,
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`
 ];
 const PRICE_CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('ราคา')}`,
@@ -889,7 +891,9 @@ async function loadData() {
       console.log('[loadData] trying:', url);
       const text=await tryLoad(url); const rows=parseCSV(text);
       console.log('[loadData] OK, rows:', rows.length);
-      allRows=buildData(rows); populateFilters(allRows);
+      const built=buildData(rows);
+      if (!built.length) throw new Error('ได้ข้อมูล 0 แถว (อาจโหลดผิด sheet)');
+      allRows=built; populateFilters(allRows);
       isLoading=false; loadError=null; applyFilters();
       btn.innerHTML='⟳ รีเฟรช'; return;
     } catch(err) { console.warn('[loadData] failed:', url, err.message); lastErr=err; }
