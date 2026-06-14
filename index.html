@@ -202,6 +202,20 @@ html[data-theme="dark"] .d-empty .ico{background:#11302a;border-color:var(--teal
 .price-loading{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--n-500);padding:2rem 0;}
 .price-error{font-size:14px;color:#A32D2D;padding:2rem 0;}
 
+/* PRICE CARD (detail panel) */
+.pcard{background:var(--primary-deep);border-radius:var(--r-lg);padding:18px 20px;color:#fff;margin-top:4px;}
+.pcard .row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--teal-100);padding:5px 0;}
+.pcard .row b{color:#fff;font-weight:500;}
+.pcard .div{height:1px;background:rgba(255,255,255,.14);margin:10px 0;}
+.pcard .total{display:flex;justify-content:space-between;align-items:flex-end;padding-top:4px;}
+.pcard .total .l{font-size:13px;color:var(--teal-200);line-height:1.5;}
+.pcard .total .v{font-family:var(--font-display);font-weight:800;font-size:28px;line-height:1;}
+/* List card foot/price */
+.lc .foot{display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px;padding-top:5px;border-top:1px solid var(--n-100);}
+.lc .price b{font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--primary);}
+.lc .price small{font-size:11px;color:var(--n-500);}
+html[data-theme="dark"] .lc .foot{border-top-color:var(--n-200);}
+
 /* LIGHTBOX */
 .lightbox{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;}
 .lightbox.open{display:flex;}
@@ -290,6 +304,7 @@ footer{margin-top:28px;padding-top:16px;border-top:2px dashed var(--n-200);color
               <option value="province">จังหวัด</option>
               <option value="distance">ระยะทาง น้อย→มาก</option>
               <option value="capacity">ความจุ มาก→น้อย</option>
+              <option value="price">ราคา น้อย→มาก</option>
             </select>
             <span class="caret">▼</span>
           </div>
@@ -358,6 +373,7 @@ const PRICE_CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&sheet=${encodeURIComponent('ราคา')}`
 ];
 
+const GROUP = 24;
 const STRIPE_HUES = ['var(--teal-200)','var(--teal-300)','var(--sun-300)','var(--coral-300)','var(--teal-400)','var(--teal-100)'];
 const PLACE_ICONS = ['🏡','🏘️','🌲','⛰️','🏊','🏕️','🌊','🏞️','⛺','🏨','🌿','🎋'];
 
@@ -369,6 +385,7 @@ function placeIcon(idx) { return PLACE_ICONS[idx % PLACE_ICONS.length]; }
 
 let allRows = [], filteredRows = [], dateColumns = [];
 let activeId = null, isLoading = false, searchQ = '';
+let priceMap = {};
 
 function parseCSV(text) {
   const rows = [];
@@ -390,6 +407,46 @@ function parseCSV(text) {
   }
   if (field || row.length) { row.push(field); rows.push(row); }
   return rows;
+}
+
+function buildPriceMap(rows) {
+  const map = {};
+  if (!rows.length) return map;
+  const header = rows[0];
+  const findCol = (kw) => {
+    for (let i = 1; i < header.length; i++) {
+      if (header[i].trim().includes(kw)) return i;
+    }
+    return -1;
+  };
+  const lunchIdx = findCol('เที่ยง'), dinnerIdx = findCol('เย็น');
+  const breakfastIdx = findCol('เช้า'), accomIdx = findCol('บริการที่พัก');
+  const totalIdx = findCol('ยอดจ่าย');
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    const name = (row[0] || '').trim();
+    if (!name) continue;
+    const g = (i) => (i >= 0 && row[i]) ? row[i].trim() : '';
+    map[name] = {
+      lunchRaw:g(lunchIdx), dinnerRaw:g(dinnerIdx),
+      breakfastRaw:g(breakfastIdx), accomRaw:g(accomIdx),
+      totalRaw:g(totalIdx),
+      total: parseFloat((g(totalIdx)).replace(/,/g,'')) || 0
+    };
+  }
+  return map;
+}
+
+function findPrice(name) {
+  if (!name || !Object.keys(priceMap).length) return null;
+  if (priceMap[name]) return priceMap[name];
+  const lower = name.toLowerCase();
+  for (const key of Object.keys(priceMap)) {
+    if (key.toLowerCase().includes(lower) || lower.includes(key.toLowerCase())) {
+      return priceMap[key];
+    }
+  }
+  return null;
 }
 
 function buildData(rows) {
@@ -488,6 +545,10 @@ function applyFilters() {
   else if (s.sort === 'province') filteredRows.sort((a,b) => (a.province||'').localeCompare(b.province||'','th') || a.name.localeCompare(b.name,'th'));
   else if (s.sort === 'distance') filteredRows.sort((a,b) => (parseFloat(a.distance)||Infinity)-(parseFloat(b.distance)||Infinity));
   else if (s.sort === 'capacity') filteredRows.sort((a,b) => (parseFloat(b.capacity)||0)-(parseFloat(a.capacity)||0));
+  else if (s.sort === 'price') filteredRows.sort((a,b) => {
+    const ap=findPrice(a.name), bp=findPrice(b.name);
+    return (ap?.total||Infinity)-(bp?.total||Infinity);
+  });
   document.getElementById('fb-count').textContent = 'พบ ' + filteredRows.length + ' แห่ง';
   renderChips();
   renderList();
@@ -559,6 +620,7 @@ function renderList() {
           ${d.duration?`<span>⏱ ${escapeHtml(d.duration)} ชม.</span>`:''}
         </div>
         ${d.dates.length?`<div class="date-chips">${d.dates.map(dt=>`<span class="date-chip">📅 ${escapeHtml(dt)}</span>`).join('')}</div>`:''}
+        ${(()=>{const p=findPrice(d.name);return p&&p.totalRaw?`<div class="foot"><div class="price"><b>฿${escapeHtml(p.totalRaw)}</b> <small>ยอดรวม ${GROUP} คน</small></div></div>`:'';})()} 
       </div>
     </button>`).join('');
   list.querySelectorAll('.lc').forEach(el => el.onclick = () => {
@@ -603,6 +665,20 @@ function renderDetail() {
   if (d.activities.length) html += `<div class="d-sec"><h4>กิจกรรม</h4><div class="tags-wrap">${d.activities.map(a=>`<span class="tag">${escapeHtml(a)}</span>`).join('')}</div></div>`;
   if (d.dates.length) html += `<div class="d-sec"><h4>วันว่าง</h4><div class="tags-wrap">${d.dates.map(dt=>`<span class="date-tag">📅 ${escapeHtml(dt)}</span>`).join('')}</div></div>`;
   if (d.mapLink) html += `<div class="d-sec"><h4>ที่ตั้ง</h4><div class="map"><span class="pin">📍</span><span class="lbl">${escapeHtml(d.province||'')}${d.distance?' · '+escapeHtml(d.distance)+' กม.':''}</span></div></div>`;
+
+  const price = findPrice(d.name);
+  if (price && price.totalRaw) {
+    html += `<div class="d-sec"><h4>ค่าใช้จ่ายโดยประมาณ</h4><div class="pcard">
+      ${price.lunchRaw?`<div class="row"><span>🍱 อาหารมื้อเที่ยง</span><b>฿${escapeHtml(price.lunchRaw)}</b></div>`:''}
+      ${price.dinnerRaw?`<div class="row"><span>🍽️ อาหารมื้อเย็น</span><b>฿${escapeHtml(price.dinnerRaw)}</b></div>`:''}
+      ${price.breakfastRaw?`<div class="row"><span>🥐 อาหารมื้อเช้า</span><b>฿${escapeHtml(price.breakfastRaw)}</b></div>`:''}
+      ${price.accomRaw?`<div class="row"><span>🏠 ค่าบริการที่พัก</span><b>฿${escapeHtml(price.accomRaw)}</b></div>`:''}
+      <div class="div"></div>
+      <div class="total">
+        <div class="l">ยอดจ่ายทั้งหมด<br/><span style="font-size:11px;opacity:.7;">${GROUP} คน</span></div>
+        <div class="v">฿${escapeHtml(price.totalRaw)}</div>
+      </div></div></div>`;
+  }
 
   html += `<div class="d-actions">
     ${d.link?`<a class="btn btn-primary btn-sm" href="${escapeHtml(d.link.split('\n')[0].trim())}" target="_blank" rel="noopener">Facebook ที่พัก →</a>`:''}
@@ -705,8 +781,25 @@ function switchTab(tab) {
 /* ── Price table ── */
 let priceLoaded=false, priceSortCol=null, priceSortDir=1, priceAllRows=[];
 
-async function loadPriceData() {
+async function loadPriceTabData() {
   if (priceLoaded) return;
+  for (const url of PRICE_CSV_URLS) {
+    try {
+      const text=await tryLoad(url); const rows=parseCSV(text);
+      if (!rows.length) throw new Error('ไม่มีข้อมูล');
+      priceAllRows=rows; priceSortCol=null; priceSortDir=1;
+      priceMap=buildPriceMap(rows); priceLoaded=true;
+      if (!isLoading && allRows.length) applyFilters();
+      return;
+    } catch(err) { /* try next */ }
+  }
+}
+
+async function loadPriceData() {
+  if (priceLoaded) {
+    const wrap = document.getElementById('price-table-wrap');
+    drawPriceTable(wrap); return;
+  }
   const wrap = document.getElementById('price-table-wrap');
   wrap.innerHTML='<div class="price-loading"><span class="spin">⟳</span> กำลังโหลดข้อมูลราคา...</div>';
   let lastErr=null;
@@ -715,7 +808,8 @@ async function loadPriceData() {
       const text=await tryLoad(url); const rows=parseCSV(text);
       if (!rows.length) throw new Error('ไม่มีข้อมูล');
       priceAllRows=rows; priceSortCol=null; priceSortDir=1;
-      drawPriceTable(wrap); priceLoaded=true; return;
+      priceMap=buildPriceMap(rows); priceLoaded=true;
+      drawPriceTable(wrap); return;
     } catch(err) { lastErr=err; }
   }
   wrap.innerHTML=`<div class="price-error">⚠️ โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(lastErr?.message||'unknown')}</div>`;
@@ -773,6 +867,7 @@ async function loadData() {
   const btn=document.getElementById('refresh-btn');
   btn.innerHTML='<span class="spin">⟳</span> กำลังโหลด...';
   isLoading=true; renderList();
+  priceLoaded=false; loadPriceTabData(); // load price in parallel
   let lastErr=null;
   for (const url of CSV_URLS) {
     try {
