@@ -377,6 +377,22 @@
   }
   .price-loading i { animation: spin 1s linear infinite; }
   .price-error { font-size: 14px; color: #A32D2D; padding: 2rem 0; }
+  .price-sort-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .price-sort-bar .sort-label {
+    font-size: 12px; color: var(--ink-soft); white-space: nowrap; margin-right: 4px;
+  }
+  .price-sort-btn {
+    font-size: 12px; padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .price-sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .price-sort-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .price-sort-btn.sort-asc::after { content: ' ▲'; }
+  .price-sort-btn.sort-desc::after { content: ' ▼'; }
   .price-table-container { overflow-x: auto; }
   .price-table {
     border-collapse: collapse;
@@ -412,13 +428,7 @@
     text-align: left;
     position: sticky; left: 0;
     z-index: 1;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.15s;
   }
-  .price-table tbody th.row-label:hover { background: #155a48; }
-  .price-table tbody th.row-label.sort-asc::after { content: ' ▲'; opacity: 0.9; }
-  .price-table tbody th.row-label.sort-desc::after { content: ' ▼'; opacity: 0.9; }
   .price-table tbody td {
     padding: 9px 14px;
     border-bottom: 1px solid var(--line);
@@ -1031,16 +1041,22 @@ function drawPriceTable(wrap) {
     });
   }
 
-  let html = '<div class="price-table-container"><table class="price-table"><thead><tr>';
+  let html = '<div class="price-sort-bar"><span class="sort-label">เรียงตาม:</span>';
+  catColIdxs.forEach(catIdx => {
+    const isActive = priceSortRow === catIdx;
+    const cls = isActive ? ('active ' + (priceSortDir === 1 ? 'sort-asc' : 'sort-desc')) : '';
+    html += `<button class="price-sort-btn ${cls}" data-cat="${catIdx}">${escapeHtml(headers[catIdx])}</button>`;
+  });
+  html += '</div>';
+
+  html += '<div class="price-table-container"><table class="price-table"><thead><tr>';
   html += `<th class="corner-cell">${escapeHtml(headers[firstColIdx])}</th>`;
   placeOrder.forEach(pIdx => {
     html += `<th>${escapeHtml((allDataRows[pIdx][firstColIdx] || '').trim())}</th>`;
   });
   html += '</tr></thead><tbody>';
   catColIdxs.forEach(catIdx => {
-    const isSortRow = priceSortRow === catIdx;
-    const cls = isSortRow ? (priceSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
-    html += `<tr><th class="row-label ${cls}" data-row="${catIdx}">${escapeHtml(headers[catIdx])}</th>`;
+    html += `<tr><th class="row-label">${escapeHtml(headers[catIdx])}</th>`;
     placeOrder.forEach(pIdx => {
       html += `<td>${escapeHtml((allDataRows[pIdx][catIdx] || '').trim())}</td>`;
     });
@@ -1049,10 +1065,10 @@ function drawPriceTable(wrap) {
   html += '</tbody></table></div>';
   wrap.innerHTML = html;
 
-  wrap.querySelectorAll('.row-label').forEach(th => {
-    th.addEventListener('click', () => {
-      const row = parseInt(th.dataset.row);
-      if (priceSortRow === row) { priceSortDir *= -1; } else { priceSortRow = row; priceSortDir = 1; }
+  wrap.querySelectorAll('.price-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = parseInt(btn.dataset.cat);
+      if (priceSortRow === cat) { priceSortDir *= -1; } else { priceSortRow = cat; priceSortDir = 1; }
       drawPriceTable(wrap);
     });
   });
