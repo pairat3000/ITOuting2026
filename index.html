@@ -377,53 +377,40 @@
   }
   .price-loading i { animation: spin 1s linear infinite; }
   .price-error { font-size: 14px; color: #A32D2D; padding: 2rem 0; }
-  .price-sort-bar {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-  .price-sort-bar .sort-label {
-    font-size: 12px; color: var(--ink-soft); white-space: nowrap; margin-right: 4px;
-  }
-  .price-sort-btn {
-    font-size: 12px; padding: 5px 14px; border-radius: 20px;
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-    cursor: pointer; transition: all 0.15s; white-space: nowrap;
-  }
-  .price-sort-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .price-sort-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .price-sort-btn.sort-asc::after { content: ' ▲'; }
-  .price-sort-btn.sort-desc::after { content: ' ▼'; }
   .price-table-container { overflow-x: auto; }
   .price-table {
     border-collapse: collapse;
     font-size: 14px;
+    width: 100%;
   }
   .price-table thead th {
     background: var(--accent);
     color: #fff;
     padding: 10px 14px;
-    text-align: center;
+    text-align: left;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
     white-space: nowrap;
     position: sticky; top: 0;
-    min-width: 120px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
   }
-  .price-table th.corner-cell {
+  .price-table thead th:first-child {
     position: sticky; top: 0; left: 0;
-    z-index: 3;
-    background: var(--accent);
-    color: #fff;
-    text-align: left;
-    min-width: 160px;
+    z-index: 3; cursor: default;
   }
-  .price-table tbody th.row-label {
+  .price-table thead th:hover { background: #155a48; }
+  .price-table thead th:first-child:hover { background: var(--accent); }
+  .price-table thead th.sort-asc::after { content: ' ▲'; opacity: 0.9; }
+  .price-table thead th.sort-desc::after { content: ' ▼'; opacity: 0.9; }
+  .price-table tbody th.place-name {
     background: var(--accent);
     color: #fff;
     padding: 10px 14px;
     font-weight: 600;
-    font-size: 12px;
-    letter-spacing: 0.04em;
+    font-size: 13px;
     white-space: nowrap;
     text-align: left;
     position: sticky; left: 0;
@@ -1012,63 +999,53 @@ async function loadPriceData() {
   wrap.innerHTML = `<div class="price-error"><i class="ti ti-alert-circle"></i> โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(lastErr?.message || 'unknown')}</div>`;
 }
 
-let priceSortRow = null;
+let priceSortCol = null;
 let priceSortDir = 1;
 let priceAllRows = [];
 
 function renderPriceTable(rows, wrap) {
   priceAllRows = rows;
-  priceSortRow = null;
+  priceSortCol = null;
   priceSortDir = 1;
   drawPriceTable(wrap);
 }
 
 function drawPriceTable(wrap) {
   const headers = priceAllRows[0];
-  const allDataRows = priceAllRows.slice(1).filter(r => r.some(c => c.trim()));
+  let dataRows = priceAllRows.slice(1).filter(r => r.some(c => c.trim()));
   const colIdxs = headers.map((h, i) => i).filter(i => headers[i].trim());
   const firstColIdx = colIdxs[0];
-  const catColIdxs = colIdxs.slice(1);
+  const dataColIdxs = colIdxs.slice(1);
 
-  let placeOrder = allDataRows.map((_, idx) => idx);
-  if (priceSortRow !== null) {
-    placeOrder = [...placeOrder].sort((a, b) => {
-      const av = (allDataRows[a][priceSortRow] || '').trim().replace(/,/g, '');
-      const bv = (allDataRows[b][priceSortRow] || '').trim().replace(/,/g, '');
+  if (priceSortCol !== null) {
+    dataRows = [...dataRows].sort((a, b) => {
+      const av = (a[priceSortCol] || '').trim().replace(/,/g, '');
+      const bv = (b[priceSortCol] || '').trim().replace(/,/g, '');
       const an = parseFloat(av), bn = parseFloat(bv);
       if (!isNaN(an) && !isNaN(bn)) return (an - bn) * priceSortDir;
       return av.localeCompare(bv, 'th') * priceSortDir;
     });
   }
 
-  let html = '<div class="price-sort-bar"><span class="sort-label">เรียงตาม:</span>';
-  catColIdxs.forEach(catIdx => {
-    const isActive = priceSortRow === catIdx;
-    const cls = isActive ? ('active ' + (priceSortDir === 1 ? 'sort-asc' : 'sort-desc')) : '';
-    html += `<button class="price-sort-btn ${cls}" data-cat="${catIdx}">${escapeHtml(headers[catIdx])}</button>`;
-  });
-  html += '</div>';
-
-  html += '<div class="price-table-container"><table class="price-table"><thead><tr>';
-  html += `<th class="corner-cell">${escapeHtml(headers[firstColIdx])}</th>`;
-  placeOrder.forEach(pIdx => {
-    html += `<th>${escapeHtml((allDataRows[pIdx][firstColIdx] || '').trim())}</th>`;
+  let html = '<div class="price-table-container"><table class="price-table"><thead><tr>';
+  html += `<th>${escapeHtml(headers[firstColIdx])}</th>`;
+  dataColIdxs.forEach(i => {
+    const cls = priceSortCol === i ? (priceSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    html += `<th class="${cls}" data-col="${i}">${escapeHtml(headers[i])}</th>`;
   });
   html += '</tr></thead><tbody>';
-  catColIdxs.forEach(catIdx => {
-    html += `<tr><th class="row-label">${escapeHtml(headers[catIdx])}</th>`;
-    placeOrder.forEach(pIdx => {
-      html += `<td>${escapeHtml((allDataRows[pIdx][catIdx] || '').trim())}</td>`;
-    });
+  dataRows.forEach(row => {
+    html += `<tr><th class="place-name">${escapeHtml((row[firstColIdx] || '').trim())}</th>`;
+    dataColIdxs.forEach(i => { html += `<td>${escapeHtml(row[i] ? row[i].trim() : '')}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
   wrap.innerHTML = html;
 
-  wrap.querySelectorAll('.price-sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cat = parseInt(btn.dataset.cat);
-      if (priceSortRow === cat) { priceSortDir *= -1; } else { priceSortRow = cat; priceSortDir = 1; }
+  wrap.querySelectorAll('.price-table thead th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = parseInt(th.dataset.col);
+      if (priceSortCol === col) { priceSortDir *= -1; } else { priceSortCol = col; priceSortDir = 1; }
       drawPriceTable(wrap);
     });
   });
