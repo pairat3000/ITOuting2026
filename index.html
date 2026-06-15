@@ -987,9 +987,9 @@ let currentUser = null;
 function parseUserSheet(rows) {
   if (!rows.length) return [];
   const headers = rows[0].map(h => h.trim().toLowerCase());
-  const uIdx    = headers.findIndex(h => h === 'user');
-  const pIdx    = headers.findIndex(h => h === 'password');
-  const nameIdx = headers.findIndex(h => h === 'profilename');
+  const uIdx    = headers.findIndex(h => h === 'user' || h === 'username');
+  const pIdx    = headers.findIndex(h => h.startsWith('pass') || h === 'pasword');
+  const nameIdx = headers.findIndex(h => h === 'profilename' || h.includes('profile'));
   const teamIdx = headers.findIndex(h => h === 'team');
   const users = [];
   for (let r = 1; r < rows.length; r++) {
