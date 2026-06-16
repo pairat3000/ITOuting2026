@@ -40,6 +40,8 @@ _s.textContent = `
 .vote-bar-fill{height:100%;background:var(--primary);border-radius:99px;}
 .vote-bar-num{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--primary);min-width:18px;text-align:right;}
 .date-mini{font-size:10px;background:var(--teal-50);color:var(--teal-800);border:1px solid var(--teal-200);border-radius:99px;padding:1px 5px;white-space:nowrap;display:inline-block;margin:1px;}
+.foot .price small{display:none;}
+.total .l br,.total .l span{display:none;}
 `;
 document.head.appendChild(_s);
 
