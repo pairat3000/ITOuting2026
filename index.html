@@ -1128,15 +1128,25 @@ function renderVotePage() {
   }
   const sorted = [...allRows].sort((a,b) => (voteMap[b.name]||0)-(voteMap[a.name]||0));
   const totalVotes = Object.values(voteMap).reduce((s,v)=>s+v, 0);
+
+  /* Standard competition ranking — ties share the same rank number */
+  const ranks = [];
+  let curRank = 1;
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && (voteMap[sorted[i].name]||0) < (voteMap[sorted[i-1].name]||0)) curRank = i + 1;
+    ranks.push(curRank);
+  }
+
   let html = `<div class="vote-summary">
     <div class="vs-item"><b>${totalVotes}</b><span>โหวตทั้งหมด</span></div>
     <div class="vs-item"><b>${myVotes.size}</b><span>สถานที่ที่คุณโหวต</span></div>
     <div class="vs-item"><b>${allRows.length}</b><span>สถานที่ทั้งหมด</span></div>
   </div><div class="vote-rank-list">`;
   sorted.forEach((place, i) => {
-    const rank = i+1, vc = voteMap[place.name]||0, voted = myVotes.has(place.name);
-    const topCls = rank===1?'rank-gold':rank===2?'rank-silver':rank===3?'rank-bronze':'';
-    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    const rank = ranks[i], vc = voteMap[place.name]||0, voted = myVotes.has(place.name);
+    const hasVotes = vc > 0;
+    const topCls = !hasVotes?'':rank===1?'rank-gold':rank===2?'rank-silver':rank===3?'rank-bronze':'';
+    const medal = !hasVotes?rank:rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
     html += `<div class="vote-rank-card ${topCls}">
       <div class="rank-num">${medal}</div>
       <div class="rank-info">
