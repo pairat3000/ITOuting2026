@@ -269,6 +269,43 @@ footer{margin-top:28px;padding-top:16px;border-top:2px dashed var(--n-200);color
 .logout-btn{font-family:var(--font-ui);font-size:11px;font-weight:500;color:var(--n-400);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:var(--r-sm);transition:.15s;margin-left:2px;}
 .logout-btn:hover{color:var(--pop);background:var(--n-100);}
 
+/* VOTE BUTTON (in list card) */
+.vote-btn{font-family:var(--font-ui);font-size:11.5px;font-weight:600;border:1.5px solid var(--n-300);background:var(--white);color:var(--n-500);border-radius:var(--r-full);padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0;user-select:none;}
+.vote-btn:hover{border-color:var(--primary);color:var(--primary);}
+.vote-btn.voted{background:var(--primary);color:#fff;border-color:var(--primary);}
+.vote-btn.voted:hover{background:var(--teal-700);border-color:var(--teal-700);}
+/* VOTE BUTTON (in detail panel) */
+.d-vote-wrap{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:14px 16px;background:var(--n-50);border:1px solid var(--n-200);border-radius:var(--r-md);}
+.vote-btn-detail{font-family:var(--font-ui);font-size:14px;font-weight:600;border:2px solid var(--primary);background:transparent;color:var(--primary);border-radius:var(--r-full);padding:9px 20px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.15s;}
+.vote-btn-detail:hover{background:var(--teal-50);}
+.vote-btn-detail.voted{background:var(--primary);color:#fff;}
+.vote-btn-detail.voted:hover{background:var(--teal-700);border-color:var(--teal-700);}
+.vote-detail-count{font-size:13px;color:var(--n-500);line-height:1.4;}
+.vote-detail-count b{display:block;font-family:var(--font-display);font-size:22px;color:var(--primary);line-height:1;}
+/* VOTE PAGE */
+.vote-page{display:none;padding:16px 0;}
+.vote-page.active{display:block;}
+.vote-summary{font-size:13px;color:var(--n-500);margin-bottom:18px;display:flex;gap:16px;flex-wrap:wrap;}
+.vote-summary .vs-item{background:var(--white);border:1px solid var(--n-200);border-radius:var(--r-lg);padding:12px 20px;display:flex;flex-direction:column;gap:2px;}
+.vote-summary .vs-item b{font-family:var(--font-display);font-size:22px;color:var(--primary);}
+.vote-summary .vs-item span{font-size:12px;color:var(--n-500);}
+.vote-rank-list{display:flex;flex-direction:column;gap:10px;max-width:760px;}
+.vote-rank-card{display:flex;align-items:center;gap:16px;background:var(--white);border:1.5px solid var(--n-200);border-radius:var(--r-lg);padding:14px 18px;box-shadow:var(--sh-sm);transition:.15s;}
+.vote-rank-card:hover{border-color:var(--teal-300);box-shadow:var(--sh-md);}
+.vote-rank-card.rank-gold{border-color:var(--sun-400);background:linear-gradient(135deg,#fffbeb 0%,var(--white) 60%);}
+.vote-rank-card.rank-silver{border-color:var(--n-300);}
+.vote-rank-card.rank-bronze{border-color:#cd7f32;background:linear-gradient(135deg,#fff8f0 0%,var(--white) 60%);}
+.rank-num{font-family:var(--font-display);font-weight:800;font-size:24px;min-width:40px;text-align:center;color:var(--n-400);flex-shrink:0;}
+.rank-info{flex:1;min-width:0;}
+.rank-info h3{font-family:var(--font-display);font-weight:600;font-size:15px;line-height:1.3;}
+.rank-info .rank-sub{font-size:12px;color:var(--n-500);margin-top:2px;}
+.rank-right{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.rank-count{text-align:center;}
+.rank-count .num{font-family:var(--font-display);font-weight:700;font-size:26px;color:var(--primary);line-height:1;}
+.rank-count .lbl{font-size:10px;color:var(--n-500);}
+.vote-empty{text-align:center;padding:60px 20px;color:var(--n-500);}
+.vote-empty .ico{font-size:40px;margin-bottom:12px;}
+
 /* RESPONSIVE */
 @media(max-width:980px){
   .layout{grid-template-columns:1fr;}
@@ -331,6 +368,7 @@ footer{margin-top:28px;padding-top:16px;border-top:2px dashed var(--n-200);color
   <div class="tab-bar">
     <button class="tab active" id="tab-places" onclick="switchTab('places')">🏘️ ที่พัก</button>
     <button class="tab" id="tab-price" onclick="switchTab('price')">💰 ราคา</button>
+    <button class="tab" id="tab-vote" onclick="switchTab('vote')">🗳️ โหวต</button>
   </div>
 
   <!-- PLACES PAGE -->
@@ -367,6 +405,7 @@ footer{margin-top:28px;padding-top:16px;border-top:2px dashed var(--n-200);color
               <option value="distance">ระยะทาง น้อย→มาก</option>
               <option value="capacity">ความจุ มาก→น้อย</option>
               <option value="price">ราคา น้อย→มาก</option>
+              <option value="votes">คะแนนโหวต มาก→น้อย</option>
             </select>
             <span class="caret">▼</span>
           </div>
@@ -405,6 +444,13 @@ footer{margin-top:28px;padding-top:16px;border-top:2px dashed var(--n-200);color
     </div>
   </div>
 
+  <!-- VOTE PAGE -->
+  <div class="vote-page" id="vote-page">
+    <div id="vote-rankings-wrap">
+      <div class="vote-loading"><span class="spin">⟳</span> กำลังโหลดคะแนนโหวต...</div>
+    </div>
+  </div>
+
   <!-- LIGHTBOX -->
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
     <button class="lb-close" id="lb-close" aria-label="ปิด">✕</button>
@@ -424,6 +470,9 @@ footer{margin-top:28px;padding-top:16px;border-top:2px dashed var(--n-200);color
 const PUB_ID = "2PACX-1vRxRCrmw0Day_vhNpryKVgls3wmIaAstPWbERRH6hZ2nPmkCM0hLCzj7UL6zYVXk0-ofJ10ulJvg9Kp";
 const SHEET_ID = "1R9ppCaIF8aYhOIBlx_kqXJNk6sZjQUTEdu_TUXIY2EY";
 const DRIVE_API_KEY = "AIzaSyCFdDRdsSgJ9tRk2I4hi6rnNx_N0Dw1Jfs";
+
+const SUPABASE_URL = 'https://ivkbazkqitckemtjwoml.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2a2JhemtxaXRja2VtdGp3b21sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNDU4MDMsImV4cCI6MjA5NTYyMTgwM30.UbBWwbNVwd1PqAJOFu_e66hCFtXbjlKmH6hlTBCBV7w';
 
 const CSV_URLS = [
   `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=0`,
@@ -454,6 +503,7 @@ function placeIcon(idx) { return PLACE_ICONS[idx % PLACE_ICONS.length]; }
 let allRows = [], filteredRows = [], dateColumns = [];
 let activeId = null, isLoading = false, searchQ = '';
 let priceMap = {}, loadError = null;
+let voteMap = {}, myVotes = new Set(), votesLoaded = false;
 
 function parseCSV(text) {
   const rows = [];
@@ -617,6 +667,7 @@ function applyFilters() {
     const ap=findPrice(a.name), bp=findPrice(b.name);
     return (ap?.total||Infinity)-(bp?.total||Infinity);
   });
+  else if (s.sort === 'votes') filteredRows.sort((a,b) => (voteMap[b.name]||0)-(voteMap[a.name]||0));
   document.getElementById('fb-count').textContent = 'พบ ' + filteredRows.length + ' แห่ง';
   renderChips();
   renderList();
@@ -703,7 +754,7 @@ function renderList() {
           ${d.duration?`<span>⏱ ${escapeHtml(d.duration)} ชม.</span>`:''}
         </div>
         ${d.dates.length?`<div class="date-chips">${d.dates.map(dt=>`<span class="date-chip">📅 ${escapeHtml(dt)}</span>`).join('')}</div>`:''}
-        ${(()=>{const p=findPrice(d.name);return p&&p.totalRaw?`<div class="foot"><div class="price"><b>฿${escapeHtml(p.totalRaw)}</b> <small>ยอดรวม ${GROUP} คน</small></div></div>`:'';})()} 
+        ${(()=>{const p=findPrice(d.name);const vc=voteMap[d.name]||0;const voted=myVotes.has(d.name);return `<div class="foot"><div class="price">${p&&p.totalRaw?`<b>฿${escapeHtml(p.totalRaw)}</b> <small>ยอดรวม ${GROUP} คน</small>`:''}</div><span class="vote-btn${voted?' voted':''}" data-name="${escapeHtml(d.name)}" onclick="handleVoteClick(event,this.dataset.name)">${voted?'✓':'▲'} ${vc}</span></div>`;})()}
       </div>
     </button>`).join('');
   list.querySelectorAll('.lc').forEach(el => el.onclick = () => {
@@ -744,6 +795,13 @@ function renderDetail() {
         ${d.distance?`<span class="metapill">🚗 ${escapeHtml(d.distance)} กม.</span>`:''}
         ${d.duration?`<span class="metapill">⏱ ${escapeHtml(d.duration)} ชม.</span>`:''}
       </div>`;
+  const dvc = voteMap[d.name]||0, dvoted = myVotes.has(d.name);
+  html += `<div class="d-vote-wrap">
+    <button class="vote-btn-detail${dvoted?' voted':''}" id="detail-vote-btn" data-name="${escapeHtml(d.name)}" onclick="handleVoteClick(event,this.dataset.name)">
+      ${dvoted?'✓ โหวตแล้ว':'▲ โหวตสถานที่นี้'}
+    </button>
+    <div class="vote-detail-count"><b>${dvc}</b> คน โหวต</div>
+  </div>`;
 
   if (d.detail) html += `<div class="d-sec"><h4>เกี่ยวกับที่พัก</h4><p class="d-desc">${escapeHtml(d.detail)}</p></div>`;
   if (d.accomTypes.length) html += `<div class="d-sec"><h4>ประเภทที่พัก</h4><div class="tags-wrap">${d.accomTypes.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div></div>`;
@@ -849,12 +907,15 @@ document.addEventListener('keydown',e=>{
 
 /* ── Tab switching ── */
 function switchTab(tab) {
-  const isPlaces = tab==='places';
+  const isPlaces = tab==='places', isPrice = tab==='price', isVote = tab==='vote';
   document.getElementById('tab-places').classList.toggle('active', isPlaces);
-  document.getElementById('tab-price').classList.toggle('active', !isPlaces);
+  document.getElementById('tab-price').classList.toggle('active', isPrice);
+  document.getElementById('tab-vote').classList.toggle('active', isVote);
   document.getElementById('places-page').style.display = isPlaces?'':'none';
-  document.getElementById('price-page').classList.toggle('active', !isPlaces);
-  if (!isPlaces) loadPriceData();
+  document.getElementById('price-page').classList.toggle('active', isPrice);
+  document.getElementById('vote-page').classList.toggle('active', isVote);
+  if (isPrice) loadPriceData();
+  if (isVote) renderVotePage();
 }
 
 /* ── Price table ── */
@@ -981,6 +1042,117 @@ async function loadData() {
   sync();
 })();
 
+/* ── Vote system ── */
+async function sbFetch(path, opts={}) {
+  return fetch(SUPABASE_URL + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+      ...(opts.headers||{})
+    }
+  });
+}
+
+async function loadVotes() {
+  if (!currentUser) return;
+  try {
+    const res = await sbFetch('/rest/v1/place_votes?select=place_name,voter_user');
+    if (!res.ok) throw new Error('Supabase ' + res.status);
+    const rows = await res.json();
+    voteMap = {}; myVotes = new Set();
+    for (const r of rows) {
+      voteMap[r.place_name] = (voteMap[r.place_name]||0) + 1;
+      if (r.voter_user === currentUser.user) myVotes.add(r.place_name);
+    }
+    votesLoaded = true;
+    if (!isLoading && allRows.length) applyFilters();
+    renderVotePage();
+  } catch(err) { console.warn('loadVotes error:', err); }
+}
+
+async function toggleVote(placeName) {
+  if (!currentUser) return;
+  const wasVoted = myVotes.has(placeName);
+  if (wasVoted) { myVotes.delete(placeName); voteMap[placeName] = Math.max((voteMap[placeName]||1)-1,0); }
+  else { myVotes.add(placeName); voteMap[placeName] = (voteMap[placeName]||0)+1; }
+  updateVoteUI(placeName);
+  renderVotePage();
+  try {
+    let res;
+    if (wasVoted) {
+      res = await sbFetch(`/rest/v1/place_votes?place_name=eq.${encodeURIComponent(placeName)}&voter_user=eq.${encodeURIComponent(currentUser.user)}`, {method:'DELETE'});
+    } else {
+      res = await sbFetch('/rest/v1/place_votes', {method:'POST', body: JSON.stringify({place_name:placeName, voter_user:currentUser.user})});
+    }
+    if (!res.ok) throw new Error('status ' + res.status);
+  } catch(err) {
+    if (wasVoted) { myVotes.add(placeName); voteMap[placeName] = (voteMap[placeName]||0)+1; }
+    else { myVotes.delete(placeName); voteMap[placeName] = Math.max((voteMap[placeName]||1)-1,0); }
+    updateVoteUI(placeName);
+    renderVotePage();
+    alert('โหวตไม่สำเร็จ กรุณาลองใหม่');
+  }
+}
+
+function updateVoteUI(placeName) {
+  const voted = myVotes.has(placeName), vc = voteMap[placeName]||0;
+  document.querySelectorAll('.vote-btn').forEach(el => {
+    if (el.dataset.name === placeName) {
+      el.className = 'vote-btn' + (voted?' voted':'');
+      el.textContent = (voted?'✓':'▲') + ' ' + vc;
+    }
+  });
+  const det = document.getElementById('detail-vote-btn');
+  if (det && det.dataset.name === placeName) {
+    det.className = 'vote-btn-detail' + (voted?' voted':'');
+    det.textContent = voted ? '✓ โหวตแล้ว' : '▲ โหวตสถานที่นี้';
+    const cntEl = det.parentElement?.querySelector('.vote-detail-count b');
+    if (cntEl) cntEl.textContent = vc;
+  }
+}
+
+function handleVoteClick(e, placeName) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  toggleVote(placeName);
+}
+
+function renderVotePage() {
+  const wrap = document.getElementById('vote-rankings-wrap');
+  if (!wrap) return;
+  if (!allRows.length) {
+    wrap.innerHTML = '<div class="vote-loading"><span class="spin">⟳</span> กำลังโหลดข้อมูลที่พัก...</div>';
+    return;
+  }
+  const sorted = [...allRows].sort((a,b) => (voteMap[b.name]||0)-(voteMap[a.name]||0));
+  const totalVotes = Object.values(voteMap).reduce((s,v)=>s+v, 0);
+  let html = `<div class="vote-summary">
+    <div class="vs-item"><b>${totalVotes}</b><span>โหวตทั้งหมด</span></div>
+    <div class="vs-item"><b>${myVotes.size}</b><span>สถานที่ที่คุณโหวต</span></div>
+    <div class="vs-item"><b>${allRows.length}</b><span>สถานที่ทั้งหมด</span></div>
+  </div><div class="vote-rank-list">`;
+  sorted.forEach((place, i) => {
+    const rank = i+1, vc = voteMap[place.name]||0, voted = myVotes.has(place.name);
+    const topCls = rank===1?'rank-gold':rank===2?'rank-silver':rank===3?'rank-bronze':'';
+    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    html += `<div class="vote-rank-card ${topCls}">
+      <div class="rank-num">${medal}</div>
+      <div class="rank-info">
+        <h3>${escapeHtml(place.name)}</h3>
+        <div class="rank-sub">📍 ${escapeHtml(place.province||'')}${place.type?' · '+escapeHtml(place.type):''}</div>
+      </div>
+      <div class="rank-right">
+        <div class="rank-count"><div class="num">${vc}</div><div class="lbl">โหวต</div></div>
+        <span class="vote-btn${voted?' voted':''}" data-name="${escapeHtml(place.name)}" onclick="handleVoteClick(event,this.dataset.name)">${voted?'✓ ยกเลิก':'▲ โหวต'}</span>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
 /* ── Auth / Login ── */
 let currentUser = null;
 
@@ -1053,6 +1225,7 @@ function showApp() {
   document.getElementById('login-screen').classList.remove('show');
   renderUserBadge();
   loadData();
+  loadVotes();
 }
 
 function renderUserBadge() {
